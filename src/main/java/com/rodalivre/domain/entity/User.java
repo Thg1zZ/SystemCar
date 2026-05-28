@@ -1,5 +1,6 @@
 package com.rodalivre.domain.entity;
 
+import com.rodalivre.domain.enums.FidelityLevel;
 import com.rodalivre.domain.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
@@ -69,4 +70,8 @@ public class User {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public FidelityLevel getFidelityLevel() {
+        return FidelityLevel.fromPoints(this.fidelityPoints != null ? this.fidelityPoints : 0);
+    }
 }

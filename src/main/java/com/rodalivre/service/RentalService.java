@@ -7,6 +7,7 @@ import com.rodalivre.domain.entity.Branch;
 import com.rodalivre.domain.entity.Rental;
 import com.rodalivre.domain.entity.User;
 import com.rodalivre.domain.entity.Vehicle;
+import com.rodalivre.domain.enums.FidelityLevel;
 import com.rodalivre.domain.enums.RentalStatus;
 import com.rodalivre.domain.enums.VehicleStatus;
 import com.rodalivre.exception.LocadoraException;
@@ -133,17 +134,10 @@ public class RentalService {
             rental.setLateFee(lateFee);
         }
 
-        // 3. Calcular desconto de fidelidade
+        // 3. Calcular desconto de fidelidade baseado no FidelityLevel do usuário
         User user = rental.getUser();
-        int points = user.getFidelityPoints() != null ? user.getFidelityPoints() : 0;
-        double discountPercent = 0.0;
-        if (points >= 2000) {
-            discountPercent = 0.15;
-        } else if (points >= 1000) {
-            discountPercent = 0.10;
-        } else if (points >= 500) {
-            discountPercent = 0.05;
-        }
+        FidelityLevel level = user.getFidelityLevel();
+        double discountPercent = level.getDiscountRate();
 
         BigDecimal discount = BigDecimal.ZERO;
         if (discountPercent > 0.0) {
