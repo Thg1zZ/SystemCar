@@ -3,6 +3,7 @@ package com.rodalivre.api.dto.request;
 import com.rodalivre.domain.enums.FuelType;
 import com.rodalivre.domain.enums.Transmission;
 import com.rodalivre.domain.enums.VehicleCategory;
+import com.rodalivre.api.validation.PlacaValid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -23,6 +24,7 @@ public class VehicleRequest {
     private Integer year;
 
     @NotBlank(message = "A placa é obrigatória")
+    @PlacaValid(message = "A placa do veículo deve estar no formato clássico (AAA-9999) ou Mercosul (AAA9A99)")
     private String licensePlate;
 
     @NotNull(message = "A categoria é obrigatória")
