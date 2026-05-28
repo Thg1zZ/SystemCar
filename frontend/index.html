@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RodaLivre | Aluguel de Carros Premium</title>
+    <meta name="description" content="Alugue o carro ideal para a sua viagem com a RodaLivre. Frota nova, melhores preços e atendimento premium.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="header" id="main-header">
+        <div class="container header-container">
+            <a href="#" class="logo">
+                <img src="file:///C:/Users/Thiago%20Gomes/.gemini/antigravity-ide/brain/bb8aca2d-5372-448f-a77a-3faea68385f1/logo_rodalivre_texto_1779914172197.png" alt="RodaLivre Logo">
+            </a>
+            <nav class="nav-links">
+                <a href="#frota">Nossa Frota</a>
+                <a href="#como-funciona">Como Funciona</a>
+                <a href="#agencias">Agências</a>
+            </nav>
+            <div class="auth-buttons">
+                <button class="btn btn-outline" id="btn-login">Entrar</button>
+                <button class="btn btn-primary" id="btn-register">Cadastrar</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="container hero-content">
+            <div class="hero-text">
+                <h1>Sua próxima jornada começa aqui.</h1>
+                <p>Alugue veículos de alta qualidade com a facilidade e a rapidez que você merece. Acelere seus sonhos com a RodaLivre.</p>
+            </div>
+            
+            <!-- Booking Form / Search -->
+            <div class="booking-widget glass-panel">
+                <form id="search-form" class="search-form">
+                    <div class="form-group">
+                        <label for="pickup-location"><i data-lucide="map-pin"></i> Retirada</label>
+                        <select id="pickup-location" required>
+                            <option value="" disabled selected>Onde você vai retirar?</option>
+                            <!-- Populado pela API -->
+                        </select>
+                    </div>
+                    
+                    <div class="form-group date-group">
+                        <label for="pickup-date"><i data-lucide="calendar"></i> Data de Retirada</label>
+                        <input type="datetime-local" id="pickup-date" required>
+                    </div>
+                    
+                    <div class="form-group date-group">
+                        <label for="return-date"><i data-lucide="calendar-check"></i> Data de Devolução</label>
+                        <input type="datetime-local" id="return-date" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-large btn-search">
+                        <i data-lucide="search"></i> Buscar Veículos
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categories Section -->
+    <section class="categories section" id="categorias">
+        <div class="container">
+            <h2 class="section-title">Escolha sua Categoria</h2>
+            <div class="category-grid">
+                <div class="category-card">
+                    <i data-lucide="car-front"></i>
+                    <h3>Econômico</h3>
+                    <p>Práticos e econômicos para a cidade.</p>
+                </div>
+                <div class="category-card">
+                    <i data-lucide="car"></i>
+                    <h3>Sedan</h3>
+                    <p>Conforto e espaço para viagens longas.</p>
+                </div>
+                <div class="category-card">
+                    <i data-lucide="mountain"></i>
+                    <h3>SUV</h3>
+                    <p>Aventure-se com segurança e estilo.</p>
+                </div>
+                <div class="category-card">
+                    <i data-lucide="gem"></i>
+                    <h3>Luxo</h3>
+                    <p>Experiência premium incomparável.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Fleet Section -->
+    <section class="fleet section bg-light" id="frota">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Nossa Frota em Destaque</h2>
+                <div class="fleet-filters">
+                    <button class="filter-btn active" data-filter="all">Todos</button>
+                    <button class="filter-btn" data-filter="suv">SUVs</button>
+                    <button class="filter-btn" data-filter="sedan">Sedans</button>
+                </div>
+            </div>
+
+            <!-- Loader -->
+            <div id="fleet-loader" class="loader-container">
+                <div class="spinner"></div>
+                <p>Buscando veículos disponíveis...</p>
+            </div>
+
+            <!-- Vehicle Grid (Populated by JS) -->
+            <div class="vehicle-grid" id="vehicle-grid" style="display: none;">
+                <!-- Card Skeleton Demo -->
+                <div class="vehicle-card">
+                    <div class="vehicle-img-wrapper">
+                        <img src="file:///C:/Users/Thiago%20Gomes/.gemini/antigravity-ide/brain/bb8aca2d-5372-448f-a77a-3faea68385f1/car_suv_1779913269548.png" alt="Carro SUV">
+                        <span class="badge badge-primary">SUV Premium</span>
+                    </div>
+                    <div class="vehicle-info">
+                        <h3>Jeep Compass 2024</h3>
+                        <div class="vehicle-features">
+                            <span><i data-lucide="users"></i> 5 Lugares</span>
+                            <span><i data-lucide="settings-2"></i> Automático</span>
+                            <span><i data-lucide="fuel"></i> Flex</span>
+                        </div>
+                        <div class="vehicle-price-action">
+                            <div class="price">
+                                <span class="currency">R$</span>
+                                <span class="amount">250</span>
+                                <span class="period">/dia</span>
+                            </div>
+                            <button class="btn btn-primary">Reservar</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Card Skeleton Demo 2 -->
+                <div class="vehicle-card">
+                    <div class="vehicle-img-wrapper">
+                        <img src="file:///C:/Users/Thiago%20Gomes/.gemini/antigravity-ide/brain/bb8aca2d-5372-448f-a77a-3faea68385f1/car_sedan_1779913285232.png" alt="Carro Sedan">
+                        <span class="badge badge-primary">Sedan Executivo</span>
+                    </div>
+                    <div class="vehicle-info">
+                        <h3>Toyota Corolla 2024</h3>
+                        <div class="vehicle-features">
+                            <span><i data-lucide="users"></i> 5 Lugares</span>
+                            <span><i data-lucide="settings-2"></i> Automático</span>
+                            <span><i data-lucide="fuel"></i> Híbrido</span>
+                        </div>
+                        <div class="vehicle-price-action">
+                            <div class="price">
+                                <span class="currency">R$</span>
+                                <span class="amount">210</span>
+                                <span class="period">/dia</span>
+                            </div>
+                            <button class="btn btn-primary">Reservar</button>
+                        </div>
+                    </div>
+                </div>
+                 <!-- Card Skeleton Demo 3 -->
+                 <div class="vehicle-card">
+                    <div class="vehicle-img-wrapper">
+                        <img src="file:///C:/Users/Thiago%20Gomes/.gemini/antigravity-ide/brain/bb8aca2d-5372-448f-a77a-3faea68385f1/car_compact_1779913298163.png" alt="Carro Compacto">
+                        <span class="badge badge-primary">Econômico</span>
+                    </div>
+                    <div class="vehicle-info">
+                        <h3>Volkswagen Polo 2024</h3>
+                        <div class="vehicle-features">
+                            <span><i data-lucide="users"></i> 5 Lugares</span>
+                            <span><i data-lucide="settings-2"></i> Manual</span>
+                            <span><i data-lucide="fuel"></i> Flex</span>
+                        </div>
+                        <div class="vehicle-price-action">
+                            <div class="price">
+                                <span class="currency">R$</span>
+                                <span class="amount">120</span>
+                                <span class="period">/dia</span>
+                            </div>
+                            <button class="btn btn-primary">Reservar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-grid">
+            <div class="footer-brand">
+                <img src="file:///C:/Users/Thiago%20Gomes/.gemini/antigravity-ide/brain/bb8aca2d-5372-448f-a77a-3faea68385f1/logo_rodalivre_texto_1779914172197.png" alt="RodaLivre Logo" class="footer-logo">
+                <p>Acelere seus sonhos com a locadora que mais cresce no Brasil. Qualidade, segurança e os melhores preços.</p>
+            </div>
+            <div class="footer-links">
+                <h4>Empresa</h4>
+                <a href="#">Sobre Nós</a>
+                <a href="#">Agências</a>
+                <a href="#">Carreiras</a>
+            </div>
+            <div class="footer-links">
+                <h4>Suporte</h4>
+                <a href="#">Central de Ajuda</a>
+                <a href="#">Termos de Uso</a>
+                <a href="#">Privacidade</a>
+            </div>
+            <div class="footer-contact">
+                <h4>Contato</h4>
+                <p><i data-lucide="phone"></i> 0800 123 4567</p>
+                <p><i data-lucide="mail"></i> contato@rodalivre.com.br</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <p>&copy; 2026 RodaLivre. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

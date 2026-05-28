@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: rodalivre-backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/rodalivre_db
+    username: rodalivre
+    password: rodalivre_password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: true
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+jwt:
+  secret: ${JWT_SECRET:4b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c}
+  expiration: 900000 # 15 minutos em ms
+  refresh-expiration: 604800000 # 7 dias em ms
+
+server:
+  port: 8080
+  error:
+    include-message: always
