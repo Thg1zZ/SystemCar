@@ -289,8 +289,8 @@
             </div>
             <div class="footer-links">
                 <h4>Empresa</h4>
-                <a href="#">Sobre Nós</a>
-                <a href="#">Agências</a>
+                <a href="#" id="link-about">Sobre Nós</a>
+                <a href="#agencias">Agências</a>
                 <a href="#">Carreiras</a>
             </div>
             <div class="footer-links">
@@ -422,6 +422,129 @@
                     </p>
                     <button class="btn btn-primary btn-accept" id="btn-accept-portfolio-zh">我理解并接受条款</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Us Modal Overlay -->
+    <div id="about-modal" class="info-modal-overlay">
+        <div class="info-modal-card glass-panel">
+            <button class="info-modal-close" id="btn-close-about">&times;</button>
+            <h2>Sobre Nós (Fictício)</h2>
+            <div class="info-modal-scroll">
+                <h3>Nossa Missão</h3>
+                <p>Prover soluções de mobilidade urbana e viagens premium com facilidade, agilidade e excelência em atendimento, acelerando seus sonhos através de uma frota impecável.</p>
+                <h3>Nossa História</h3>
+                <p>Nascida em 2026 como um projeto de portfólio de engenharia de software, a RodaLivre cresceu no imaginário dos testes como a locadora virtual mais rápida do Brasil, unindo conceitos avançados de backend em Java 21, Spring Boot e interfaces responsivas modernas.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal Overlay -->
+    <div id="login-modal" class="info-modal-overlay">
+        <div class="info-modal-card glass-panel" style="max-width: 400px;">
+            <button class="info-modal-close" id="btn-close-login">&times;</button>
+            <h2>Entrar no Sistema</h2>
+            <div id="login-error" class="error-msg" style="display: none; margin-bottom: 1rem; color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 0.8rem; border-radius: var(--radius-md); font-size: 0.9rem; text-align: center;"></div>
+            <form id="login-form" class="modal-form">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" required placeholder="exemplo@email.com" style="width: 100%; padding: 0.8rem; border: 2px solid var(--border-color); border-radius: var(--radius-md);">
+                </div>
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label for="login-password">Senha</label>
+                    <input type="password" id="login-password" required placeholder="Sua senha" style="width: 100%; padding: 0.8rem; border: 2px solid var(--border-color); border-radius: var(--radius-md);">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Acessar</button>
+            </form>
+            <p style="margin-top: 1rem; font-size: 0.9rem; text-align: center; color: var(--text-light);">Não tem conta? <a href="#" id="link-go-register" style="color: var(--primary); font-weight: 600;">Cadastre-se</a></p>
+        </div>
+    </div>
+
+    <!-- Register Modal Overlay -->
+    <div id="register-modal" class="info-modal-overlay">
+        <div class="info-modal-card glass-panel" style="max-width: 450px;">
+            <button class="info-modal-close" id="btn-close-register">&times;</button>
+            <h2>Criar sua Conta</h2>
+            <div id="register-error" class="error-msg" style="display: none; margin-bottom: 1rem; color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 0.8rem; border-radius: var(--radius-md); font-size: 0.9rem; text-align: center;"></div>
+            <form id="register-form" class="modal-form">
+                <div class="form-group" style="margin-bottom: 0.6rem;">
+                    <label for="reg-name">Nome Completo</label>
+                    <input type="text" id="reg-name" required placeholder="Seu nome completo" style="width: 100%; padding: 0.7rem; border: 2px solid var(--border-color); border-radius: var(--radius-md);">
+                </div>
+                <div class="form-group" style="margin-bottom: 0.6rem;">
+                    <label for="reg-email">Email</label>
+                    <input type="email" id="reg-email" required placeholder="exemplo@email.com" style="width: 100%; padding: 0.7rem; border: 2px solid var(--border-color); border-radius: var(--radius-md);">
+                </div>
+                <div class="form-group" style="margin-bottom: 0.6rem;">
+                    <label for="reg-password">Senha</label>
+                    <input type="password" id="reg-password" required placeholder="Mínimo 6 caracteres" style="width: 100%; padding: 0.7rem; border: 2px solid var(--border-color); border-radius: var(--radius-md);">
+                </div>
+                <div class="form-group" style="margin-bottom: 0.6rem;">
+                    <label for="reg-birth-date">Data de Nascimento</label>
+                    <input type="date" id="reg-birth-date" required style="width: 100%; padding: 0.7rem; border: 2px solid var(--border-color); border-radius: var(--radius-md);">
+                </div>
+                <div class="form-group" style="margin-bottom: 0.6rem;">
+                    <label for="reg-cpf">CPF</label>
+                    <input type="text" id="reg-cpf" required placeholder="111.111.111-11" style="width: 100%; padding: 0.7rem; border: 2px solid var(--border-color); border-radius: var(--radius-md);">
+                </div>
+                <div class="form-group" style="margin-bottom: 0.6rem;">
+                    <label for="reg-cnh">CNH</label>
+                    <input type="text" id="reg-cnh" required placeholder="Ex: 12345678901 (11 dígitos)" style="width: 100%; padding: 0.7rem; border: 2px solid var(--border-color); border-radius: var(--radius-md);">
+                </div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="reg-cnh-expiration">Vencimento da CNH</label>
+                    <input type="date" id="reg-cnh-expiration" required style="width: 100%; padding: 0.7rem; border: 2px solid var(--border-color); border-radius: var(--radius-md);">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Cadastrar</button>
+            </form>
+            <p style="margin-top: 1rem; font-size: 0.9rem; text-align: center; color: var(--text-light);">Já possui conta? <a href="#" id="link-go-login" style="color: var(--primary); font-weight: 600;">Entrar</a></p>
+        </div>
+    </div>
+
+    <!-- Booking Modal Overlay -->
+    <div id="booking-modal" class="info-modal-overlay">
+        <div class="info-modal-card glass-panel" style="max-width: 500px;">
+            <button class="info-modal-close" id="btn-close-booking">&times;</button>
+            <h2>Confirmar Reserva</h2>
+            <div id="booking-modal-content">
+                <div id="booking-error" class="error-msg" style="display: none; margin-bottom: 1rem; color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 0.8rem; border-radius: var(--radius-md); font-size: 0.9rem; text-align: center;"></div>
+                <div class="booking-car-details" style="display: flex; gap: 1rem; align-items: center; background: var(--bg-light); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; border: 1px solid var(--border-color);">
+                    <img id="booking-car-img" src="" alt="" style="width: 100px; height: auto; object-fit: contain;">
+                    <div style="text-align: left;">
+                        <h3 id="booking-car-name">Nome do Carro</h3>
+                        <p id="booking-car-rate" style="color: var(--primary); font-weight: 700; margin-top: 0.25rem;">R$ 0/dia</p>
+                    </div>
+                </div>
+                
+                <form id="booking-form" style="text-align: left;">
+                    <input type="hidden" id="booking-vehicle-id">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="booking-pickup"><i data-lucide="map-pin" style="width: 14px; height: 14px; color: var(--primary); display: inline-block; vertical-align: middle; margin-right: 0.25rem;"></i> Retirada</label>
+                        <select id="booking-pickup" required style="width: 100%; padding: 0.8rem; border: 2px solid var(--border-color); border-radius: var(--radius-md); background: white; margin-top: 0.25rem;"></select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="booking-return"><i data-lucide="map-pin" style="width: 14px; height: 14px; color: var(--primary); display: inline-block; vertical-align: middle; margin-right: 0.25rem;"></i> Devolução</label>
+                        <select id="booking-return" required style="width: 100%; padding: 0.8rem; border: 2px solid var(--border-color); border-radius: var(--radius-md); background: white; margin-top: 0.25rem;"></select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="booking-pickup-date"><i data-lucide="calendar" style="width: 14px; height: 14px; color: var(--primary); display: inline-block; vertical-align: middle; margin-right: 0.25rem;"></i> Data de Retirada</label>
+                        <input type="datetime-local" id="booking-pickup-date" required style="width: 100%; padding: 0.8rem; border: 2px solid var(--border-color); border-radius: var(--radius-md); margin-top: 0.25rem;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label for="booking-return-date"><i data-lucide="calendar-check" style="width: 14px; height: 14px; color: var(--primary); display: inline-block; vertical-align: middle; margin-right: 0.25rem;"></i> Data de Devolução</label>
+                        <input type="datetime-local" id="booking-return-date" required style="width: 100%; padding: 0.8rem; border: 2px solid var(--border-color); border-radius: var(--radius-md); margin-top: 0.25rem;">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem;">Finalizar Pedido</button>
+                </form>
+            </div>
+            
+            <div id="booking-success-content" style="display: none; text-align: center; padding: 2rem 0;">
+                <span style="font-size: 4rem;">🎉</span>
+                <h3 style="font-size: 1.5rem; margin-top: 1rem; color: var(--success);">Reserva Realizada!</h3>
+                <p style="margin-top: 1rem; color: var(--text-main); line-height: 1.6;">Sua reserva foi cadastrada no banco de dados com sucesso. Dirija-se à agência na data selecionada com sua CNH para retirar o veículo.</p>
+                <button class="btn btn-outline" id="btn-close-success" style="margin-top: 1.5rem;">Fechar Janela</button>
             </div>
         </div>
     </div>

@@ -4,11 +4,26 @@
 
 const API_BASE_URL = 'https://systemcar-backend.onrender.com/api/v1';
 
+let cachedBranches = [];
+let currentUserToken = localStorage.getItem('jwt_token') || null;
+let currentUserInfo = null;
+
 document.addEventListener('DOMContentLoaded', () => {
+    // Carregar informações do localStorage
+    if (localStorage.getItem('user_info')) {
+        try {
+            currentUserInfo = JSON.parse(localStorage.getItem('user_info'));
+        } catch(e) {
+            currentUserInfo = null;
+        }
+    }
+
     // 1. Initializations
     initSplashScreen();
     initHeaderScroll();
-    initInfoModals(); // Inicializa os modais de ajuda, termos e privacidade
+    initInfoModals(); // Inicializa ajuda, termos, privacidade e sobre nós
+    initAuth();       // Inicializa login, cadastro e visualização do cabeçalho
+    initBooking();    // Inicializa fechamento de modal e submit de reservas
     loadBranches();
     loadVehicles();
 
@@ -119,6 +134,7 @@ function initInfoModals() {
     setupModal('link-help', 'help-modal', 'btn-close-help');
     setupModal('link-terms', 'terms-modal', 'btn-close-terms');
     setupModal('link-privacy', 'privacy-modal', 'btn-close-privacy');
+    setupModal('link-about', 'about-modal', 'btn-close-about');
 }
 
 /**
@@ -148,6 +164,7 @@ async function loadBranches() {
         if (!response.ok) throw new Error('Falha ao carregar agências');
 
         const branches = await response.json();
+        cachedBranches = branches;
 
         if (branches && branches.length > 0) {
             select.innerHTML = '<option value="" disabled selected>Onde você vai retirar?</option>';
@@ -326,11 +343,11 @@ async function loadVehicles() {
                 btn.className = 'btn btn-primary';
                 btn.textContent = 'Reservar';
 
-                priceAction.appendChild(price);
-                priceAction.appendChild(btn);
+                // Ouvinte de clique direto no botão Reservar
+                btn.addEventListener('click', () => {
+                    openBookingModal(vehicle);
+                });
 
-                info.appendChild(title);
-                info.appendChild(features);
                 priceAction.appendChild(price);
                 priceAction.appendChild(btn);
 
@@ -395,4 +412,479 @@ function setupFleetFilters() {
             });
         });
     });
+}
+
+/**
+ * Initialize Authentication Forms, fast-switch navigation links and DOM Listeners
+ */
+function initAuth() {
+    const loginModal = document.getElementById('login-modal');
+    const registerModal = document.getElementById('register-modal');
+    const closeLogin = document.getElementById('btn-close-login');
+    const closeRegister = document.getElementById('btn-close-register');
+    
+    const openLogin = () => {
+        loginModal.classList.add('show');
+        document.getElementById('login-error').style.display = 'none';
+    };
+    
+    const openRegister = () => {
+        registerModal.classList.add('show');
+        document.getElementById('register-error').style.display = 'none';
+    };
+    
+    // Configura botões de fechar dos modais
+    if (closeLogin) closeLogin.addEventListener('click', () => loginModal.classList.remove('show'));
+    if (closeRegister) closeRegister.addEventListener('click', () => registerModal.classList.remove('show'));
+    
+    // Fechar ao clicar no fundo escuro
+    if (loginModal) {
+        loginModal.addEventListener('click', (e) => {
+            if (e.target === loginModal) loginModal.classList.remove('show');
+        });
+    }
+    if (registerModal) {
+        registerModal.addEventListener('click', (e) => {
+            if (e.target === registerModal) registerModal.classList.remove('show');
+        });
+    }
+
+    // Troca rápida de modais ("Não tem conta? Cadastre-se" e "Já possui conta? Entrar")
+    const goRegister = document.getElementById('link-go-register');
+    const goLogin = document.getElementById('link-go-login');
+    
+    if (goRegister) {
+        goRegister.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginModal.classList.remove('show');
+            openRegister();
+        });
+    }
+    if (goLogin) {
+        goLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            registerModal.classList.remove('show');
+            openLogin();
+        });
+    }
+
+    // Formulário de Login
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const errorDiv = document.getElementById('login-error');
+            const submitBtn = loginForm.querySelector('button[type="submit"]');
+            
+            errorDiv.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Autenticando...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                if (!response.ok) {
+                    const errText = await response.text();
+                    let errMsg = 'E-mail ou senha incorretos.';
+                    try {
+                        const errJson = JSON.parse(errText);
+                        if (errJson.message) errMsg = errJson.message;
+                    } catch(e) {}
+                    throw new Error(errMsg);
+                }
+                
+                const data = await response.json();
+                localStorage.setItem('jwt_token', data.token);
+                localStorage.setItem('user_info', JSON.stringify({
+                    id: data.id,
+                    email: data.email,
+                    fullName: data.fullName,
+                    roles: data.roles
+                }));
+                
+                loginModal.classList.remove('show');
+                loginForm.reset();
+                
+                currentUserToken = data.token;
+                currentUserInfo = data;
+                updateAuthHeader();
+                
+            } catch(err) {
+                console.error('Erro no login:', err);
+                errorDiv.textContent = err.message || 'Erro de conexão. Tente novamente.';
+                errorDiv.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Acessar';
+            }
+        });
+    }
+
+    // Formulário de Cadastro
+    const registerForm = document.getElementById('register-form');
+    if (registerForm) {
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fullName = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+            const birthDate = document.getElementById('reg-birth-date').value;
+            const cpf = document.getElementById('reg-cpf').value;
+            const cnh = document.getElementById('reg-cnh').value;
+            const cnhExpirationDate = document.getElementById('reg-cnh-expiration').value;
+            const errorDiv = document.getElementById('register-error');
+            const submitBtn = registerForm.querySelector('button[type="submit"]');
+            
+            errorDiv.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Cadastrando...';
+            
+            try {
+                if (password.length < 6) {
+                    throw new Error('A senha deve ter pelo menos 6 caracteres.');
+                }
+                if (cnh.replace(/\D/g, '').length !== 11) {
+                    throw new Error('A CNH deve ter exatamente 11 dígitos.');
+                }
+                
+                const response = await fetch(`${API_BASE_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fullName,
+                        email,
+                        password,
+                        cpf,
+                        cnh,
+                        cnhExpirationDate,
+                        birthDate
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errText = await response.text();
+                    let errMsg = 'Erro ao realizar cadastro.';
+                    try {
+                        const errJson = JSON.parse(errText);
+                        if (errJson.message) errMsg = errJson.message;
+                        else if (typeof errJson === 'string') errMsg = errJson;
+                    } catch(e) {
+                        if (errText) errMsg = errText;
+                    }
+                    throw new Error(errMsg);
+                }
+                
+                alert('Conta criada com sucesso! Faça login para continuar.');
+                registerModal.classList.remove('show');
+                registerForm.reset();
+                
+                openLogin();
+                
+            } catch(err) {
+                console.error('Erro no cadastro:', err);
+                errorDiv.textContent = err.message || 'Erro de conexão. Tente novamente.';
+                errorDiv.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Cadastrar';
+            }
+        });
+    }
+
+    updateAuthHeader();
+}
+
+/**
+ * Handle Premium authentication state visibility toggles in the header
+ */
+function updateAuthHeader() {
+    const authContainer = document.querySelector('.auth-buttons');
+    if (!authContainer) return;
+
+    const token = localStorage.getItem('jwt_token');
+    const userInfoStr = localStorage.getItem('user_info');
+    
+    if (token && userInfoStr) {
+        try {
+            const userInfo = JSON.parse(userInfoStr);
+            const firstName = userInfo.fullName.split(' ')[0];
+            
+            authContainer.innerHTML = `
+                <span class="user-greeting" style="color: var(--text-main); font-weight: 500; margin-right: 1.2rem; font-size: 0.95rem;">
+                    Olá, <strong style="color: var(--primary); font-weight: 700;">${firstName}</strong>
+                </span>
+                <button class="btn btn-outline" id="btn-logout" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Sair</button>
+            `;
+            
+            // Logout click listener
+            document.getElementById('btn-logout').addEventListener('click', () => {
+                localStorage.removeItem('jwt_token');
+                localStorage.removeItem('user_info');
+                currentUserToken = null;
+                currentUserInfo = null;
+                updateAuthHeader();
+            });
+            
+        } catch(e) {
+            localStorage.removeItem('jwt_token');
+            localStorage.removeItem('user_info');
+            renderGuestHeader(authContainer);
+        }
+    } else {
+        renderGuestHeader(authContainer);
+    }
+}
+
+/**
+ * Redraw header guest state buttons and rebind click events
+ */
+function renderGuestHeader(container) {
+    container.innerHTML = `
+        <button class="btn btn-outline" id="btn-login">Entrar</button>
+        <button class="btn btn-primary" id="btn-register">Cadastrar</button>
+    `;
+    
+    const btnLogin = document.getElementById('btn-login');
+    const btnRegister = document.getElementById('btn-register');
+    const loginModal = document.getElementById('login-modal');
+    const registerModal = document.getElementById('register-modal');
+    
+    if (btnLogin) btnLogin.addEventListener('click', () => {
+        loginModal.classList.add('show');
+        document.getElementById('login-error').style.display = 'none';
+    });
+    if (btnRegister) btnRegister.addEventListener('click', () => {
+        registerModal.classList.add('show');
+        document.getElementById('register-error').style.display = 'none';
+    });
+}
+
+/**
+ * Initialize vehicle booking interactions
+ */
+function initBooking() {
+    const bookingModal = document.getElementById('booking-modal');
+    const closeBooking = document.getElementById('btn-close-booking');
+    const closeSuccess = document.getElementById('btn-close-success');
+    const bookingForm = document.getElementById('booking-form');
+    
+    if (closeBooking) {
+        closeBooking.addEventListener('click', () => {
+            bookingModal.classList.remove('show');
+        });
+    }
+    
+    if (closeSuccess) {
+        closeSuccess.addEventListener('click', () => {
+            bookingModal.classList.remove('show');
+        });
+    }
+    
+    if (bookingModal) {
+        bookingModal.addEventListener('click', (e) => {
+            if (e.target === bookingModal) {
+                bookingModal.classList.remove('show');
+            }
+        });
+    }
+    
+    if (bookingForm) {
+        bookingForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const token = localStorage.getItem('jwt_token');
+            if (!token) {
+                alert('Você precisa estar logado para efetuar reservas.');
+                bookingModal.classList.remove('show');
+                return;
+            }
+            
+            const errorDiv = document.getElementById('booking-error');
+            const submitBtn = bookingForm.querySelector('button[type="submit"]');
+            
+            const vehicleId = document.getElementById('booking-vehicle-id').value;
+            const pickupBranchId = document.getElementById('booking-pickup').value;
+            const returnBranchId = document.getElementById('booking-return').value;
+            const pickupDateVal = document.getElementById('booking-pickup-date').value;
+            const returnDateVal = document.getElementById('booking-return-date').value;
+            
+            errorDiv.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Finalizando Pedido...';
+            
+            try {
+                const pickup = new Date(pickupDateVal);
+                const ret = new Date(returnDateVal);
+                
+                if (ret <= pickup) {
+                    throw new Error('A data de devolução deve ser posterior à data de retirada!');
+                }
+                
+                const now = new Date();
+                if (pickup < now) {
+                    throw new Error('A data de retirada deve estar no futuro!');
+                }
+                
+                // Formata datas para o LocalDateTime esperado pelo Spring Boot
+                const pickupDateStr = pickupDateVal.replace(' ', 'T');
+                const returnDateStr = returnDateVal.replace(' ', 'T');
+                
+                const payload = {
+                    vehicleId: vehicleId,
+                    pickupBranchId: pickupBranchId,
+                    returnBranchId: returnBranchId,
+                    pickupDate: pickupDateStr,
+                    returnDate: returnDateStr,
+                    additionals: []
+                };
+                
+                const response = await fetch(`${API_BASE_URL}/rentals`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    const errText = await response.text();
+                    let errMsg = 'Falha ao finalizar reserva.';
+                    try {
+                        const errJson = JSON.parse(errText);
+                        if (errJson.message) errMsg = errJson.message;
+                        else if (typeof errJson === 'string') errMsg = errJson;
+                    } catch(e) {
+                        if (errText) errMsg = errText;
+                    }
+                    throw new Error(errMsg);
+                }
+                
+                document.getElementById('booking-modal-content').style.display = 'none';
+                document.getElementById('booking-success-content').style.display = 'block';
+                bookingForm.reset();
+                
+            } catch(err) {
+                console.error('Erro ao efetuar reserva:', err);
+                errorDiv.textContent = err.message || 'Erro ao processar reserva. Tente novamente.';
+                errorDiv.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Finalizar Pedido';
+            }
+        });
+    }
+}
+
+/**
+ * Handle details injection and modal toggle upon vehicle card click
+ */
+function openBookingModal(vehicle) {
+    const token = localStorage.getItem('jwt_token');
+    if (!token) {
+        const loginModal = document.getElementById('login-modal');
+        if (loginModal) {
+            loginModal.classList.add('show');
+            const errorDiv = document.getElementById('login-error');
+            errorDiv.textContent = 'Para prosseguir com a reserva, faça o login ou crie uma conta.';
+            errorDiv.style.background = 'rgba(255, 90, 31, 0.1)';
+            errorDiv.style.color = 'var(--primary)';
+            errorDiv.style.display = 'block';
+        }
+        return;
+    }
+    
+    const bookingModal = document.getElementById('booking-modal');
+    if (!bookingModal) return;
+    
+    bookingModal.classList.add('show');
+    document.getElementById('booking-modal-content').style.display = 'block';
+    document.getElementById('booking-success-content').style.display = 'none';
+    document.getElementById('booking-error').style.display = 'none';
+    
+    let vehicleImg = 'img/compact.png';
+    if (vehicle.imageUrls) {
+        try {
+            const parsed = JSON.parse(vehicle.imageUrls);
+            if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].startsWith('http')) {
+                vehicleImg = parsed[0];
+            }
+        } catch (e) {
+            if (typeof vehicle.imageUrls === 'string' && vehicle.imageUrls.startsWith('http')) {
+                vehicleImg = vehicle.imageUrls;
+            }
+        }
+    }
+    if (vehicleImg === 'img/compact.png' && vehicle.category && typeof vehicle.category === 'string') {
+        const cat = vehicle.category.toUpperCase();
+        if (cat.includes('SUV') || cat.includes('TRUCK')) {
+            vehicleImg = 'img/suv.png';
+        } else if (cat.includes('LUXURY') || cat.includes('SPORTS')) {
+            vehicleImg = 'img/luxo.png';
+        } else if (cat.includes('INTERMEDIATE') || cat.includes('FULL_SIZE') || cat.includes('SEDAN') || cat.includes('VAN')) {
+            vehicleImg = 'img/sedan.png';
+        }
+    }
+    
+    document.getElementById('booking-car-img').src = vehicleImg;
+    document.getElementById('booking-car-img').alt = vehicle.model || 'Carro';
+    document.getElementById('booking-car-name').textContent = `${vehicle.brand} ${vehicle.model} ${vehicle.year}`;
+    document.getElementById('booking-car-rate').textContent = `R$ ${vehicle.dailyRate}/dia`;
+    document.getElementById('booking-vehicle-id').value = vehicle.id;
+    
+    const pickupSelect = document.getElementById('booking-pickup');
+    const returnSelect = document.getElementById('booking-return');
+    
+    pickupSelect.innerHTML = '';
+    returnSelect.innerHTML = '';
+    
+    if (cachedBranches && cachedBranches.length > 0) {
+        cachedBranches.forEach(branch => {
+            const opt1 = document.createElement('option');
+            opt1.value = branch.id;
+            opt1.textContent = `${branch.name} - ${branch.city}/${branch.state}`;
+            pickupSelect.appendChild(opt1);
+            
+            const opt2 = document.createElement('option');
+            opt2.value = branch.id;
+            opt2.textContent = `${branch.name} - ${branch.city}/${branch.state}`;
+            returnSelect.appendChild(opt2);
+        });
+    } else {
+        pickupSelect.innerHTML = '<option value="" disabled>Nenhuma agência disponível</option>';
+        returnSelect.innerHTML = '<option value="" disabled>Nenhuma agência disponível</option>';
+    }
+    
+    const heroPickupDate = document.getElementById('pickup-date').value;
+    const heroReturnDate = document.getElementById('return-date').value;
+    const heroPickupBranch = document.getElementById('pickup-location').value;
+    
+    if (heroPickupDate) {
+        document.getElementById('booking-pickup-date').value = heroPickupDate;
+    } else {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(9, 0, 0, 0);
+        document.getElementById('booking-pickup-date').value = tomorrow.toISOString().slice(0, 16);
+    }
+    
+    if (heroReturnDate) {
+        document.getElementById('booking-return-date').value = heroReturnDate;
+    } else {
+        const afterTomorrow = new Date();
+        afterTomorrow.setDate(afterTomorrow.getDate() + 2);
+        afterTomorrow.setHours(9, 0, 0, 0);
+        document.getElementById('booking-return-date').value = afterTomorrow.toISOString().slice(0, 16);
+    }
+    
+    if (heroPickupBranch && cachedBranches.some(b => b.id === heroPickupBranch)) {
+        pickupSelect.value = heroPickupBranch;
+        returnSelect.value = heroPickupBranch;
+    }
 }
