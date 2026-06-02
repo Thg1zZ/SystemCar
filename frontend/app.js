@@ -41,28 +41,31 @@ function showPortfolioModal() {
     
     const btnPt = document.getElementById('btn-lang-pt');
     const btnEn = document.getElementById('btn-lang-en');
+    const btnEs = document.getElementById('btn-lang-es');
+    const btnZh = document.getElementById('btn-lang-zh');
+    
     const ptContent = document.getElementById('lang-content-pt');
     const enContent = document.getElementById('lang-content-en');
+    const esContent = document.getElementById('lang-content-es');
+    const zhContent = document.getElementById('lang-content-zh');
+    
+    const allBtns = [btnPt, btnEn, btnEs, btnZh];
+    const allContents = [ptContent, enContent, esContent, zhContent];
+    
+    const switchLanguage = (activeBtn, activeContent) => {
+        allBtns.forEach(btn => btn.classList.remove('active'));
+        allContents.forEach(content => content.style.display = 'none');
+        activeBtn.classList.add('active');
+        activeContent.style.display = 'block';
+    };
     
     // Toggles de idiomas em tempo real
-    btnPt.addEventListener('click', () => {
-        btnPt.classList.add('active');
-        btnEn.classList.remove('active');
-        ptContent.style.display = 'block';
-        enContent.style.display = 'none';
-    });
-    
-    btnEn.addEventListener('click', () => {
-        btnEn.classList.add('active');
-        btnPt.classList.remove('active');
-        enContent.style.display = 'block';
-        ptContent.style.display = 'none';
-    });
+    btnPt.addEventListener('click', () => switchLanguage(btnPt, ptContent));
+    btnEn.addEventListener('click', () => switchLanguage(btnEn, enContent));
+    btnEs.addEventListener('click', () => switchLanguage(btnEs, esContent));
+    btnZh.addEventListener('click', () => switchLanguage(btnZh, zhContent));
     
     // Botões de consentimento/aceite para liberação do site
-    const dismissPt = document.getElementById('btn-accept-portfolio');
-    const dismissEn = document.getElementById('btn-accept-portfolio-en');
-    
     const acceptTerms = () => {
         modal.classList.remove('show');
         setTimeout(() => {
@@ -70,8 +73,10 @@ function showPortfolioModal() {
         }, 500); // tempo correspondente à transição de opacidade do modal
     };
     
-    dismissPt.addEventListener('click', acceptTerms);
-    dismissEn.addEventListener('click', acceptTerms);
+    document.getElementById('btn-accept-portfolio').addEventListener('click', acceptTerms);
+    document.getElementById('btn-accept-portfolio-en').addEventListener('click', acceptTerms);
+    document.getElementById('btn-accept-portfolio-es').addEventListener('click', acceptTerms);
+    document.getElementById('btn-accept-portfolio-zh').addEventListener('click', acceptTerms);
 }
 
 /**
