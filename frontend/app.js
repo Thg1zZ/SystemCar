@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. Initializations
     initSplashScreen();
     initHeaderScroll();
+    initInfoModals(); // Inicializa os modais de ajuda, termos e privacidade
     loadBranches();
     loadVehicles();
 
@@ -70,6 +71,14 @@ function showPortfolioModal() {
         modal.classList.remove('show');
         setTimeout(() => {
             modal.style.display = 'none';
+            // Ativa o badge persistente no canto inferior esquerdo
+            const badge = document.querySelector('.portfolio-badge');
+            if (badge) {
+                badge.style.display = 'flex';
+                setTimeout(() => {
+                    badge.style.opacity = '1';
+                }, 50);
+            }
         }, 500); // tempo correspondente à transição de opacidade do modal
     };
     
@@ -77,6 +86,39 @@ function showPortfolioModal() {
     document.getElementById('btn-accept-portfolio-en').addEventListener('click', acceptTerms);
     document.getElementById('btn-accept-portfolio-es').addEventListener('click', acceptTerms);
     document.getElementById('btn-accept-portfolio-zh').addEventListener('click', acceptTerms);
+}
+
+/**
+ * Handles opening and closing of informational document modals
+ */
+function initInfoModals() {
+    const setupModal = (linkId, modalId, closeId) => {
+        const link = document.getElementById(linkId);
+        const modal = document.getElementById(modalId);
+        const close = document.getElementById(closeId);
+        
+        if (!link || !modal || !close) return;
+        
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            modal.classList.add('show');
+        });
+        
+        close.addEventListener('click', () => {
+            modal.classList.remove('show');
+        });
+        
+        // Fecha ao clicar no fundo escuro
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('show');
+            }
+        });
+    };
+    
+    setupModal('link-help', 'help-modal', 'btn-close-help');
+    setupModal('link-terms', 'terms-modal', 'btn-close-terms');
+    setupModal('link-privacy', 'privacy-modal', 'btn-close-privacy');
 }
 
 /**
@@ -198,13 +240,29 @@ async function loadVehicles() {
 
                 const img = document.createElement('img');
                  
-                // Mapeia imagens locais de altíssima fidelidade de forma extremamente segura
+                // Mapeia imagens reais (Unsplash) ou ilustrações locais de forma ultra-segura
                 let vehicleImg = 'img/compact.png';
-                if (vehicle.category && typeof vehicle.category === 'string') {
+                if (vehicle.imageUrls) {
+                    try {
+                        const parsed = JSON.parse(vehicle.imageUrls);
+                        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].startsWith('http')) {
+                            vehicleImg = parsed[0];
+                        }
+                    } catch (e) {
+                        if (typeof vehicle.imageUrls === 'string' && vehicle.imageUrls.startsWith('http')) {
+                            vehicleImg = vehicle.imageUrls;
+                        }
+                    }
+                }
+                
+                // Caso não possua imagens reais válidas, utiliza os assets locais organizados por categoria
+                if (vehicleImg === 'img/compact.png' && vehicle.category && typeof vehicle.category === 'string') {
                     const cat = vehicle.category.toUpperCase();
                     if (cat.includes('SUV') || cat.includes('TRUCK')) {
                         vehicleImg = 'img/suv.png';
-                    } else if (cat.includes('INTERMEDIATE') || cat.includes('FULL_SIZE') || cat.includes('LUXURY') || cat.includes('SPORTS') || cat.includes('SEDAN') || cat.includes('VAN')) {
+                    } else if (cat.includes('LUXURY') || cat.includes('SPORTS')) {
+                        vehicleImg = 'img/luxo.png';
+                    } else if (cat.includes('INTERMEDIATE') || cat.includes('FULL_SIZE') || cat.includes('SEDAN') || cat.includes('VAN')) {
                         vehicleImg = 'img/sedan.png';
                     }
                 }

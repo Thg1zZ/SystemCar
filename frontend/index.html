@@ -132,6 +132,30 @@
         </div>
     </section>
 
+    <!-- Como Funciona Section -->
+    <section class="how-it-works section" id="como-funciona">
+        <div class="container">
+            <h2 class="section-title">Como Funciona</h2>
+            <div class="timeline-grid">
+                <div class="timeline-card glass-panel">
+                    <div class="timeline-num">1</div>
+                    <h3>Escolha o Veículo</h3>
+                    <p>Filtre nossa frota premium por categoria (SUV, Sedan ou Luxo) e escolha o modelo perfeito que atende à sua viagem.</p>
+                </div>
+                <div class="timeline-card glass-panel">
+                    <div class="timeline-num">2</div>
+                    <h3>Defina as Datas</h3>
+                    <p>Escolha o local de retirada e agende as datas e horários de partida e devolução em poucos segundos com nosso formulário intuitivo.</p>
+                </div>
+                <div class="timeline-card glass-panel">
+                    <div class="timeline-num">3</div>
+                    <h3>Retire e Acelere</h3>
+                    <p>Dirija-se à agência escolhida (São Paulo, Rio ou Belo Horizonte) com sua CNH em dia, retire a chave e comece sua jornada premium.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Fleet Section -->
     <section class="fleet section bg-light" id="frota">
         <div class="container">
@@ -226,6 +250,36 @@
         </div>
     </section>
 
+    <!-- Agencias Section -->
+    <section class="branches-section section" id="agencias">
+        <div class="container">
+            <h2 class="section-title">Nossas Agências</h2>
+            <div class="branches-grid">
+                <div class="branch-card glass-panel">
+                    <i data-lucide="map-pin" class="branch-icon"></i>
+                    <h3>Agência Aeroporto (SP)</h3>
+                    <p>Avenida Santos Dumont, 3000 — São Paulo/SP</p>
+                    <p class="branch-phone"><i data-lucide="phone"></i> (11) 5555-1234</p>
+                    <div class="map-placeholder">Fictício — Próximo ao Aeroporto de Congonhas</div>
+                </div>
+                <div class="branch-card glass-panel">
+                    <i data-lucide="map-pin" class="branch-icon"></i>
+                    <h3>Agência Copacabana (RJ)</h3>
+                    <p>Avenida Atlântica, 1702 — Rio de Janeiro/RJ</p>
+                    <p class="branch-phone"><i data-lucide="phone"></i> (21) 5555-5678</p>
+                    <div class="map-placeholder">Fictício — Orla de Copacabana</div>
+                </div>
+                <div class="branch-card glass-panel">
+                    <i data-lucide="map-pin" class="branch-icon"></i>
+                    <h3>Agência Savassi (MG)</h3>
+                    <p>Avenida Cristóvão Colombo, 135 — Belo Horizonte/MG</p>
+                    <p class="branch-phone"><i data-lucide="phone"></i> (31) 5555-9999</p>
+                    <div class="map-placeholder">Fictício — Coração da Savassi</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer class="footer">
         <div class="container footer-grid">
@@ -241,9 +295,9 @@
             </div>
             <div class="footer-links">
                 <h4>Suporte</h4>
-                <a href="#">Central de Ajuda</a>
-                <a href="#">Termos de Uso</a>
-                <a href="#">Privacidade</a>
+                <a href="#" id="link-help">Central de Ajuda</a>
+                <a href="#" id="link-terms">Termos de Uso</a>
+                <a href="#" id="link-privacy">Privacidade</a>
             </div>
             <div class="footer-contact">
                 <h4>Contato</h4>
@@ -257,6 +311,63 @@
             </div>
         </div>
     </footer>
+
+    <!-- Persistent Floating Portfolio Badge (Visible after accepting terms) -->
+    <div class="portfolio-badge" style="display: none; opacity: 0; transition: opacity 0.5s ease;">
+        <span class="badge-icon">⚠️</span>
+        <div class="badge-text">
+            <strong>Ambiente de Portfólio</strong>
+            <span>Sistema fictício para fins demonstrativos.</span>
+        </div>
+    </div>
+
+    <!-- Help Center Modal Overlay -->
+    <div id="help-modal" class="info-modal-overlay">
+        <div class="info-modal-card glass-panel">
+            <button class="info-modal-close" id="btn-close-help">&times;</button>
+            <h2>Central de Ajuda (Fictícia)</h2>
+            <div class="info-modal-scroll">
+                <h3>Como posso alugar um carro?</h3>
+                <p>Navegue pela frota, escolha o seu modelo e preencha as informações do formulário de busca. Clique em "Buscar Veículos" e depois em "Reservar" no modelo desejado.</p>
+                <h3>Quais os requisitos para aluguel?</h3>
+                <p>Ter CNH válida dentro da validade (CNHs vencidas bloqueiam alugueis) e não ser inadimplente no sistema de testes.</p>
+                <h3>Como funciona o sistema de fidelidade?</h3>
+                <p>A cada devolução realizada com sucesso, o cliente ganha 100 pontos de fidelidade que se acumulam e garantem descontos automáticos de 5%, 10% ou 15% nas próximas diárias.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terms of Use Modal Overlay -->
+    <div id="terms-modal" class="info-modal-overlay">
+        <div class="info-modal-card glass-panel">
+            <button class="info-modal-close" id="btn-close-terms">&times;</button>
+            <h2>Termos de Uso (Fictício)</h2>
+            <div class="info-modal-scroll">
+                <h3>1. Aceite dos Termos Fictícios</h3>
+                <p>Ao navegar neste site, você concorda que esta aplicação é uma simulação de engenharia e design de portfólio. Não há transações financeiras reais nem entrega física de automóveis.</p>
+                <h3>2. Restrições do Domínio</h3>
+                <p>Todas as regras de negócio de CNH válida, limites de KM e bloqueio de inadimplentes são automatizados em memória RAM apenas para testes operacionais.</p>
+                <h3>3. Isenção de Responsabilidade</h3>
+                <p>O autor não se responsabiliza por nenhuma interpretação comercial enganosa. Esta aplicação possui fins unicamente de exibição profissional acadêmica.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Privacy Policy Modal Overlay -->
+    <div id="privacy-modal" class="info-modal-overlay">
+        <div class="info-modal-card glass-panel">
+            <button class="info-modal-close" id="btn-close-privacy">&times;</button>
+            <h2>Política de Privacidade (Fictícia)</h2>
+            <div class="info-modal-scroll">
+                <h3>1. Tratamento de Dados de Simulação</h3>
+                <p>Qualquer dado cadastrado (nome, CNH fictícia, etc.) é armazenado em uma fila in-memory RAM temporária no Render e é apagado automaticamente sempre que o servidor reinicia.</p>
+                <h3>2. Sem Coleta de Dados Reais</h3>
+                <p>Este sistema não recolhe nem envia dados pessoais reais a terceiros, não armazena cookies invasivos e não realiza rastreamento comercial.</p>
+                <h3>3. Segurança</h3>
+                <p>As conexões e testes de API utilizam os protocolos HTTPS nativos da Vercel e Render para fins de segurança no tráfego de dados simulados do portfólio.</p>
+            </div>
+        </div>
+    </div>
 
     <!-- Portfolio Warning Modal Overlay -->
     <div id="portfolio-modal" class="modal-overlay">
