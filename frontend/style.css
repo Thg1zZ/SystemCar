@@ -1008,7 +1008,25 @@ a {
    Portfolio Terms Acceptance Modal Overlay
    ========================================================================== */
 
-.modal-overlay,
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    padding: 1.5rem;
+    background: rgba(11, 15, 25, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 999999; /* Fica acima de tudo, incluindo cabeçalho fixo */
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
 .info-modal-overlay {
     position: fixed;
     top: 0;
@@ -1021,28 +1039,17 @@ a {
     opacity: 0;
     visibility: hidden;
     padding: 1.5rem;
+    background: rgba(11, 15, 25, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 100000;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
 }
 
 .modal-overlay.show,
 .info-modal-overlay.show {
     opacity: 1;
     visibility: visible;
-}
-
-.modal-overlay {
-    background: rgba(11, 15, 25, 0.75);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    z-index: 999999; /* Fica acima de tudo, incluindo cabeçalho fixo */
-    transition: opacity 0.5s ease, visibility 0.5s ease;
-}
-
-.info-modal-overlay {
-    background: rgba(11, 15, 25, 0.6);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    z-index: 100000;
-    transition: opacity 0.4s ease, visibility 0.4s ease;
 }
 
 .modal-card {
