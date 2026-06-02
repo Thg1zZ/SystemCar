@@ -2,13 +2,37 @@
  * RodaLivre - Vanilla JS Application Logic
  */
 
-const API_BASE_URL = 'https://systemcar-backend.onrender.com/api/v1';
+let API_BASE_URL = 'https://systemcar-backend.onrender.com/api/v1';
+
+// Função assíncrona para detectar backend local de forma dinâmica e resiliente
+async function detectApiUrl() {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 800); // 800ms de limite
+            const response = await fetch('http://localhost:8080/api/v1/branches', { signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (response.ok) {
+                API_BASE_URL = 'http://localhost:8080/api/v1';
+                console.log('Backend local ativo. Usando API local:', API_BASE_URL);
+                return;
+            }
+        } catch (e) {
+            console.log('Backend local offline. Usando fallback de produção:', API_BASE_URL);
+        }
+    } else {
+        console.log('Acesso em produção. Usando API na nuvem:', API_BASE_URL);
+    }
+}
 
 let cachedBranches = [];
 let currentUserToken = localStorage.getItem('jwt_token') || null;
 let currentUserInfo = null;
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // 0. Detectar a API correta de forma assíncrona e resiliente
+    await detectApiUrl();
+
     // Carregar informações do localStorage
     if (localStorage.getItem('user_info')) {
         try {

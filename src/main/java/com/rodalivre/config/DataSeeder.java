@@ -42,6 +42,9 @@ public class DataSeeder implements CommandLineRunner {
             seedUsers();
         }
 
+        // Garante que os administradores específicos existam no banco
+        ensureAdminUsersExist();
+
         // 3. Seed Vehicles (Veículos de teste)
         if (vehicleRepository.count() == 0) {
             seedVehicles();
@@ -262,6 +265,46 @@ public class DataSeeder implements CommandLineRunner {
                 .build();
 
         userRepository.saveAll(Arrays.asList(admin, operator, u1, u2, u3, u4, u5, u6, u7, expiredCnh, clientInadimplente));
+    }
+
+    private void ensureAdminUsersExist() {
+        // Garante email.admin@rodalivre.com
+        if (!userRepository.existsByEmail("email.admin@rodalivre.com")) {
+            User emailAdmin = User.builder()
+                    .fullName("Email Admin")
+                    .email("email.admin@rodalivre.com")
+                    .passwordHash(passwordEncoder.encode("admin123"))
+                    .cpf("999.888.777-66")
+                    .phone("(11) 98888-7777")
+                    .birthDate(LocalDate.of(1990, 1, 1))
+                    .cnh("99999999999")
+                    .cnhExpirationDate(LocalDate.now().plusYears(10))
+                    .inadimplente(false)
+                    .role(UserRole.ADMIN)
+                    .fidelityPoints(0)
+                    .active(true)
+                    .build();
+            userRepository.save(emailAdmin);
+        }
+
+        // Garante admin@rodalivre.com
+        if (!userRepository.existsByEmail("admin@rodalivre.com")) {
+            User admin = User.builder()
+                    .fullName("Thiago Gomes (Admin)")
+                    .email("admin@rodalivre.com")
+                    .passwordHash(passwordEncoder.encode("admin123"))
+                    .cpf("111.111.111-11")
+                    .phone("(11) 99999-1111")
+                    .birthDate(LocalDate.of(1995, 5, 15))
+                    .cnh("12345678901")
+                    .cnhExpirationDate(LocalDate.now().plusYears(5))
+                    .inadimplente(false)
+                    .role(UserRole.ADMIN)
+                    .fidelityPoints(0)
+                    .active(true)
+                    .build();
+            userRepository.save(admin);
+        }
     }
 
     private void seedVehicles() {
