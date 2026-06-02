@@ -149,10 +149,20 @@ async function loadVehicles() {
                 imgWrapper.className = 'vehicle-img-wrapper';
 
                 const img = document.createElement('img');
-                // Placeholder se vier sem imageUrls
-                img.src = vehicle.imageUrls && vehicle.imageUrls.length > 0 ?
-                    vehicle.imageUrls[0] :
-                    'img/compact.png';
+                 
+                // Mapeia imagens locais de altíssima fidelidade baseado na categoria do banco
+                let vehicleImg = 'img/compact.png';
+                if (vehicle.category) {
+                    const cat = vehicle.category.toUpperCase();
+                    if (cat.includes('SUV') || cat.includes('TRUCK')) {
+                        vehicleImg = 'img/suv.png';
+                    } else if (cat.includes('INTERMEDIATE') || cat.includes('FULL_SIZE') || cat.includes('LUXURY') || cat.includes('SPORTS')) {
+                        vehicleImg = 'img/sedan.png';
+                    } else {
+                        vehicleImg = 'img/compact.png';
+                    }
+                }
+                img.src = vehicleImg;
                 img.alt = vehicle.model;
 
                 const badge = document.createElement('span');
@@ -238,6 +248,7 @@ async function loadVehicles() {
 
         loader.style.display = 'none';
         grid.style.display = 'grid';
+        setupFleetFilters(); // Inicializa os filtros dinâmicos na tela
 
     } catch (error) {
         console.error('Erro de conexão com API ao carregar frota:', error);
@@ -245,4 +256,39 @@ async function loadVehicles() {
         grid.innerHTML = '<p class="error-msg">Erro ao carregar veículos. Tente novamente mais tarde.</p>';
         grid.style.display = 'block';
     }
+}
+
+/**
+ * Handle Fleet Category Filtering dynamically
+ */
+function setupFleetFilters() {
+    const filters = document.querySelectorAll('.filter-btn');
+    filters.forEach(btn => {
+        // Remove listeners antigos para evitar duplicações caso recarregue a API
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        newBtn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn').forEach(f => f.classList.remove('active'));
+            newBtn.classList.add('active');
+            
+            const filterValue = newBtn.getAttribute('data-filter').toLowerCase();
+            const cards = document.querySelectorAll('.vehicle-card');
+            
+            cards.forEach(card => {
+                const categoryBadge = card.querySelector('.badge').textContent.toLowerCase();
+                if (filterValue === 'all') {
+                    card.style.display = 'block';
+                } else if (filterValue === 'suv' && categoryBadge.includes('suv')) {
+                    card.style.display = 'block';
+                } else if (filterValue === 'sedan' && (categoryBadge.includes('sedan') || categoryBadge.includes('intermediate') || categoryBadge.includes('full_size'))) {
+                    card.style.display = 'block';
+                } else if (filterValue === 'luxo' && (categoryBadge.includes('luxury') || categoryBadge.includes('sports') || categoryBadge.includes('luxo'))) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
 }
