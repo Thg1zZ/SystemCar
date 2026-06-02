@@ -26,7 +26,7 @@ public interface RentalRepository extends JpaRepository<Rental, UUID> {
                                      @Param("pickup") LocalDateTime pickup, 
                                      @Param("returnDate") LocalDateTime returnDate);
 
-    long countByStatus(com.rodalivre.domain.enums.RentalStatus status);
+    long countByStatus(RentalStatus status);
 
     @Query("SELECT SUM(r.totalCost) FROM Rental r WHERE r.status = com.rodalivre.domain.enums.RentalStatus.COMPLETED")
     java.math.BigDecimal sumCompletedRentalsRevenue();
