@@ -15,9 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setupSearchForm();
 });
 
-/**
- * Controls the fade-out of the Premium Splash Screen
- */
 function initSplashScreen() {
     const splash = document.getElementById('splash-screen');
     if (!splash) return;
@@ -27,8 +24,54 @@ function initSplashScreen() {
         splash.classList.add('fade-out');
         setTimeout(() => {
             splash.style.display = 'none';
+            showPortfolioModal(); // Dispara o modal de consentimento legal do portfólio
         }, 800); // tempo correspondente à transição de fade CSS
     }, 4500);
+}
+
+/**
+ * Handles language switching and acceptance click events in the Portfolio Consent Modal
+ */
+function showPortfolioModal() {
+    const modal = document.getElementById('portfolio-modal');
+    if (!modal) return;
+    
+    // Mostra o modal de bloqueio de tela com efeito scale-in
+    modal.classList.add('show');
+    
+    const btnPt = document.getElementById('btn-lang-pt');
+    const btnEn = document.getElementById('btn-lang-en');
+    const ptContent = document.getElementById('lang-content-pt');
+    const enContent = document.getElementById('lang-content-en');
+    
+    // Toggles de idiomas em tempo real
+    btnPt.addEventListener('click', () => {
+        btnPt.classList.add('active');
+        btnEn.classList.remove('active');
+        ptContent.style.display = 'block';
+        enContent.style.display = 'none';
+    });
+    
+    btnEn.addEventListener('click', () => {
+        btnEn.classList.add('active');
+        btnPt.classList.remove('active');
+        enContent.style.display = 'block';
+        ptContent.style.display = 'none';
+    });
+    
+    // Botões de consentimento/aceite para liberação do site
+    const dismissPt = document.getElementById('btn-accept-portfolio');
+    const dismissEn = document.getElementById('btn-accept-portfolio-en');
+    
+    const acceptTerms = () => {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 500); // tempo correspondente à transição de opacidade do modal
+    };
+    
+    dismissPt.addEventListener('click', acceptTerms);
+    dismissEn.addEventListener('click', acceptTerms);
 }
 
 /**

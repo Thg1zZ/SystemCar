@@ -258,12 +258,38 @@
         </div>
     </footer>
 
-    <!-- Floating Portfolio Badge -->
-    <div class="portfolio-badge">
-        <span class="badge-icon">⚠️</span>
-        <div class="badge-text">
-            <strong>Ambiente de Portfólio</strong>
-            <span>Sistema fictício sem fins comerciais ou operacionais.</span>
+    <!-- Portfolio Warning Modal Overlay -->
+    <div id="portfolio-modal" class="modal-overlay">
+        <div class="modal-card glass-panel">
+            <div class="modal-header">
+                <div class="lang-selector">
+                    <button class="lang-btn active" id="btn-lang-pt">PT 🇧🇷</button>
+                    <button class="lang-btn" id="btn-lang-en">EN 🇺🇸</button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <span class="modal-warning-icon">⚠️</span>
+                
+                <div id="lang-content-pt" class="lang-content">
+                    <h2>Aviso de Projeto Acadêmico</h2>
+                    <p class="modal-desc">
+                        Este site é um <strong>projeto demonstrativo de portfólio</strong> de desenvolvimento de software e UI/UX. 
+                        Todas as marcas, agências, veículos, valores e reservas exibidos são <strong>100% fictícios e simulados</strong>. 
+                        Este sistema não possui fins comerciais, operacionais ou vínculo real com nenhuma locadora.
+                    </p>
+                    <button class="btn btn-primary btn-accept" id="btn-accept-portfolio">Entendi e Aceito os Termos</button>
+                </div>
+                
+                <div id="lang-content-en" class="lang-content" style="display: none;">
+                    <h2>Portfolio Demonstration Project</h2>
+                    <p class="modal-desc">
+                        This website is an academic and <strong>software engineering portfolio demonstration</strong>. 
+                        All brands, branches, vehicles, pricing, and bookings displayed here are <strong>100% fictitious and simulated</strong>. 
+                        This system has no commercial or operational purposes and is not affiliated with any real rental company.
+                    </p>
+                    <button class="btn btn-primary btn-accept" id="btn-accept-portfolio-en">I Understand and Accept the Terms</button>
+                </div>
+            </div>
         </div>
     </div>
 
