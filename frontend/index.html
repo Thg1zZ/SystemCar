@@ -566,6 +566,9 @@
                     <a href="#" class="admin-nav-item" data-tab="tab-fleet">
                         <i data-lucide="car"></i> Veículos & Frota
                     </a>
+                    <a href="#" class="admin-nav-item" data-tab="tab-rentals">
+                        <i data-lucide="calendar-range"></i> Aluguéis & Reservas
+                    </a>
                     <a href="#" class="admin-nav-item" data-tab="tab-customers">
                         <i data-lucide="users"></i> Clientes
                     </a>
@@ -648,7 +651,12 @@
                 
                 <!-- Fleet Tab -->
                 <div id="tab-fleet" class="admin-tab-content">
-                    <h2 class="admin-page-title">Gestão de Veículos & Frota</h2>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                        <h2 class="admin-page-title" style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">Gestão de Veículos & Frota</h2>
+                        <button class="btn btn-primary" id="btn-admin-add-vehicle" style="padding: 0.6rem 1.2rem; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+                            <i data-lucide="plus" style="width: 16px; height: 16px;"></i> Adicionar Veículo
+                        </button>
+                    </div>
                     <div class="admin-table-container">
                         <table class="admin-table" id="admin-vehicles-table">
                             <thead>
@@ -658,6 +666,29 @@
                                     <th>Categoria</th>
                                     <th>Status</th>
                                     <th>Diária (R$)</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Populado via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Rentals Tab -->
+                <div id="tab-rentals" class="admin-tab-content">
+                    <h2 class="admin-page-title">Gestão de Aluguéis & Reservas</h2>
+                    <div class="admin-table-container">
+                        <table class="admin-table" id="admin-rentals-table">
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Veículo</th>
+                                    <th>Retirada</th>
+                                    <th>Devolução</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -688,6 +719,149 @@
                     </div>
                 </div>
             </main>
+
+            <!-- Persistent Portfolio Warning Banner inside Admin Panel -->
+            <div class="admin-portfolio-banner" style="position: absolute; bottom: 0; left: 0; width: 100%; background: var(--bg-light); border-top: 1px solid var(--border-color); padding: 0.4rem 1.5rem; font-size: 0.72rem; color: var(--text-light); text-align: center; font-weight: 600; letter-spacing: 0.05em; z-index: 5;">
+                ⚠️ AMBIENTE DE PORTFÓLIO: Todos os dados cadastrados, aluguéis e devoluções são 100% FICTÍCIOS. Nomes e CNHs mascarados com segurança.
+            </div>
+        </div>
+    </div>
+
+    <!-- Vehicle Form Modal (Add/Edit) -->
+    <div id="vehicle-form-modal" class="info-modal-overlay">
+        <div class="info-modal-card glass-panel" style="max-width: 500px; padding: 2.5rem 2rem 2rem !important;">
+            <button class="info-modal-close" id="btn-close-vehicle-modal">&times;</button>
+            <h2 id="vehicle-modal-title" style="font-size: 1.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--primary-light); padding-bottom: 0.5rem; color: var(--secondary);">Cadastrar Veículo</h2>
+            <form id="vehicle-form" style="text-align: left;">
+                <input type="hidden" id="admin-vehicle-id">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; max-height: 380px; overflow-y: auto; padding-right: 0.25rem; margin-bottom: 1.2rem;">
+                    <div class="form-group">
+                        <label for="admin-veh-brand" style="font-size: 0.85rem;">Marca</label>
+                        <input type="text" id="admin-veh-brand" required placeholder="Ex: Toyota" style="width: 100%; padding: 0.6rem; border: 2px solid var(--border-color); border-radius: var(--radius-md);">
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-veh-model" style="font-size: 0.85rem;">Modelo</label>
+                        <input type="text" id="admin-veh-model" required placeholder="Ex: Corolla" style="width: 100%; padding: 0.6rem; border: 2px solid var(--border-color); border-radius: var(--radius-md);">
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-veh-year" style="font-size: 0.85rem;">Ano</label>
+                        <input type="number" id="admin-veh-year" required placeholder="2024" style="width: 100%; padding: 0.6rem; border: 2px solid var(--border-color); border-radius: var(--radius-md);">
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-veh-plate" style="font-size: 0.85rem;">Placa</label>
+                        <input type="text" id="admin-veh-plate" required placeholder="Ex: ABC1D23" style="width: 100%; padding: 0.6rem; border: 2px solid var(--border-color); border-radius: var(--radius-md);">
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-veh-category" style="font-size: 0.85rem;">Categoria</label>
+                        <select id="admin-veh-category" required style="width: 100%; padding: 0.6rem; border: 2px solid var(--border-color); border-radius: var(--radius-md); background: white;">
+                            <option value="COMPACT">Econômico</option>
+                            <option value="SEDAN">Sedan</option>
+                            <option value="SUV">SUV</option>
+                            <option value="LUXURY">Luxo</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-veh-transmission" style="font-size: 0.85rem;">Câmbio</label>
+                        <select id="admin-veh-transmission" required style="width: 100%; padding: 0.6rem; border: 2px solid var(--border-color); border-radius: var(--radius-md); background: white;">
+                            <option value="AUTOMATIC">Automático</option>
+                            <option value="MANUAL">Manual</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-veh-fuel" style="font-size: 0.85rem;">Combustível</label>
+                        <input type="text" id="admin-veh-fuel" required placeholder="Ex: Flex" style="width: 100%; padding: 0.6rem; border: 2px solid var(--border-color); border-radius: var(--radius-md);">
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-veh-seats" style="font-size: 0.85rem;">Assentos</label>
+                        <input type="number" id="admin-veh-seats" required placeholder="5" style="width: 100%; padding: 0.6rem; border: 2px solid var(--border-color); border-radius: var(--radius-md);">
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label for="admin-veh-rate" style="font-size: 0.85rem;">Valor da Diária (R$)</label>
+                        <input type="number" id="admin-veh-rate" required placeholder="150" style="width: 100%; padding: 0.6rem; border: 2px solid var(--border-color); border-radius: var(--radius-md);">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.9rem;">Salvar Veículo</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Maintenance Form Modal -->
+    <div id="maintenance-form-modal" class="info-modal-overlay">
+        <div class="info-modal-card glass-panel" style="max-width: 450px; padding: 2.5rem 2rem 2rem !important;">
+            <button class="info-modal-close" id="btn-close-maintenance-modal">&times;</button>
+            <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--primary-light); padding-bottom: 0.5rem; color: var(--secondary);">Registrar Manutenção</h2>
+            <form id="maintenance-form" style="text-align: left;">
+                <input type="hidden" id="maintenance-vehicle-id">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="maint-type">Tipo de Manutenção</label>
+                    <select id="maint-type" required style="width: 100%; padding: 0.8rem; border: 2px solid var(--border-color); border-radius: var(--radius-md); background: white;">
+                        <option value="PREVENTIVE">Prevenção Geral</option>
+                        <option value="CORRECTIVE">Reparo Corretivo</option>
+                        <option value="TIRES">Troca de Pneus</option>
+                        <option value="OIL_CHANGE">Troca de Óleo</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="maint-provider">Oficina Responsável</label>
+                    <input type="text" id="maint-provider" required placeholder="Nome da oficina" style="width: 100%; padding: 0.8rem; border: 2px solid var(--border-color); border-radius: var(--radius-md);">
+                </div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="maint-cost">Custo Estimado (R$)</label>
+                    <input type="number" id="maint-cost" required placeholder="0.00" style="width: 100%; padding: 0.8rem; border: 2px solid var(--border-color); border-radius: var(--radius-md);">
+                </div>
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label for="maint-notes">Notas / Observações</label>
+                    <textarea id="maint-notes" rows="3" placeholder="Detalhes adicionais..." style="width: 100%; padding: 0.8rem; border: 2px solid var(--border-color); border-radius: var(--radius-md); font-family: inherit; resize: none;"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.9rem;">Iniciar Manutenção</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Return Rental Form Modal -->
+    <div id="return-form-modal" class="info-modal-overlay">
+        <div class="info-modal-card glass-panel" style="max-width: 450px; padding: 2.5rem 2rem 2rem !important;">
+            <button class="info-modal-close" id="btn-close-return-modal">&times;</button>
+            <h2 style="font-size: 1.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--primary-light); padding-bottom: 0.5rem; color: var(--secondary);">Registrar Devolução</h2>
+            <form id="return-form" style="text-align: left;">
+                <input type="hidden" id="return-rental-id">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="return-km">Quilometragem Final (KM)</label>
+                    <input type="number" id="return-km" required placeholder="KM atual do painel" style="width: 100%; padding: 0.8rem; border: 2px solid var(--border-color); border-radius: var(--radius-md);">
+                </div>
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label for="return-branch">Agência de Devolução</label>
+                    <select id="return-branch" required style="width: 100%; padding: 0.8rem; border: 2px solid var(--border-color); border-radius: var(--radius-md); background: white;"></select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.9rem;">Confirmar Devolução</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Receipt Modal Overlay (Fictitious Receipt) -->
+    <div id="receipt-modal" class="info-modal-overlay">
+        <div class="info-modal-card glass-panel" style="max-width: 450px; text-align: center; border: 2px dashed var(--border-color) !important; padding: 2.5rem 2rem 2rem !important;">
+            <button class="info-modal-close" id="btn-close-receipt">&times;</button>
+            <span style="font-size: 3rem;">🧾</span>
+            <h2 style="margin-top: 0.5rem; letter-spacing: 0.05em; text-transform: uppercase; font-size: 1.35rem; color: var(--secondary);">Recibo de Devolução</h2>
+            <p style="font-size: 0.72rem; color: var(--text-light); text-transform: uppercase; margin-bottom: 1rem;">RodaLivre Rent-a-Car — Simulação</p>
+            
+            <div class="receipt-content" style="background: #FAFAFA; border: 1px solid var(--border-color); padding: 1.25rem; border-radius: var(--radius-md); font-family: monospace; font-size: 0.85rem; text-align: left; line-height: 1.6; margin-bottom: 1.5rem;">
+                <p><strong>CÓDIGO:</strong> <span id="receipt-id">---</span></p>
+                <p><strong>CLIENTE:</strong> <span id="receipt-client">---</span></p>
+                <p><strong>VEÍCULO:</strong> <span id="receipt-car">---</span></p>
+                <hr style="border: none; border-top: 1px dashed var(--border-color); margin: 0.6rem 0;">
+                <p><strong>KM INICIAL:</strong> <span id="receipt-km-start">0 km</span></p>
+                <p><strong>KM FINAL:</strong> <span id="receipt-km-end">0 km</span></p>
+                <p><strong>DIAS TOTAL:</strong> <span id="receipt-days">0</span></p>
+                <hr style="border: none; border-top: 1px dashed var(--border-color); margin: 0.6rem 0;">
+                <p><strong>VALOR DIÁRIAS:</strong> <span id="receipt-subtotal">R$ 0,00</span></p>
+                <p style="color: var(--danger);"><strong>MULTAS ATRASO:</strong> <span id="receipt-fines">R$ 0,00</span></p>
+                <p style="color: var(--primary); font-size: 1rem; font-weight: 750; margin-top: 0.5rem;"><strong>TOTAL PAGO:</strong> <span id="receipt-total">R$ 0,00</span></p>
+            </div>
+            
+            <p style="font-size: 0.78rem; color: var(--text-light); line-height: 1.4; margin-bottom: 1.2rem;">⚠️ <strong>ATENÇÃO:</strong> Esta transação foi efetuada em ambiente simulado de testes (in-memory). Nenhum valor financeiro real foi cobrado.</p>
+            <button class="btn btn-outline" id="btn-close-receipt-btn" style="width: 100%;">Fechar Cupom</button>
         </div>
     </div>
 

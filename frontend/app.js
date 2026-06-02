@@ -944,22 +944,45 @@ function openBookingModal(vehicle) {
 /**
  * Admin Dashboard System
  */
+/**
+ * Admin Dashboard System & Simulated Operations
+ */
+
+// Helpers de Privacidade e Máscara para Ambiente Fictício
+function maskCnh(cnh) {
+    if (!cnh) return '***.***.***';
+    const clean = cnh.replace(/\D/g, '');
+    if (clean.length < 5) return '***.***.***-**';
+    return `***.***.${clean.slice(-5, -2)}-${clean.slice(-2)}`;
+}
+
+function maskCpf(cpf) {
+    if (!cpf) return '***.***.***-**';
+    const clean = cpf.replace(/\D/g, '');
+    if (clean.length < 5) return '***.***.***-**';
+    return `***.***.${clean.slice(-5, -2)}-${clean.slice(-2)}`;
+}
+
+function abbreviateName(fullName) {
+    if (!fullName) return 'Cliente Fictício';
+    const parts = fullName.trim().split(' ');
+    if (parts.length === 1) return parts[0];
+    if (parts.length === 2) return `${parts[0]} ${parts[1][0]}.`;
+    return `${parts[0]} ${parts[1][0]}. ${parts[parts.length - 1][0]}.`;
+}
+
 function initAdminDashboard() {
     const closeBtn = document.getElementById('btn-close-admin-dashboard');
     const modal = document.getElementById('admin-dashboard-modal');
     
     if (closeBtn && modal) {
-        closeBtn.addEventListener('click', () => {
-            modal.classList.remove('show');
-        });
+        closeBtn.addEventListener('click', () => modal.classList.remove('show'));
         modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.classList.remove('show');
-            }
+            if (e.target === modal) modal.classList.remove('show');
         });
     }
     
-    // Configura navegação de abas
+    // Navegação de abas
     const navItems = document.querySelectorAll('.admin-nav-item');
     const tabContents = document.querySelectorAll('.admin-tab-content');
     
@@ -974,9 +997,214 @@ function initAdminDashboard() {
             const targetTab = document.getElementById(tabId);
             if (targetTab) {
                 targetTab.classList.add('active');
+                if (tabId === 'tab-rentals') {
+                    loadAdminDashboardRentals();
+                } else if (tabId === 'tab-fleet') {
+                    loadAdminDashboardFleet();
+                }
             }
         });
     });
+
+    // Inicialização das Modais de Formulários
+    setupAdminForms();
+}
+
+function setupAdminForms() {
+    // 1. Modais de Veículos
+    const vehModal = document.getElementById('vehicle-form-modal');
+    const closeVeh = document.getElementById('btn-close-vehicle-modal');
+    const addVehBtn = document.getElementById('btn-admin-add-vehicle');
+    const vehForm = document.getElementById('vehicle-form');
+    
+    if (closeVeh) closeVeh.addEventListener('click', () => vehModal.classList.remove('show'));
+    if (addVehBtn) {
+        addVehBtn.addEventListener('click', () => {
+            vehForm.reset();
+            document.getElementById('admin-vehicle-id').value = '';
+            document.getElementById('vehicle-modal-title').textContent = 'Cadastrar Veículo';
+            vehModal.classList.add('show');
+        });
+    }
+    
+    if (vehForm) {
+        vehForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const token = localStorage.getItem('jwt_token');
+            if (!token) return;
+            
+            const id = document.getElementById('admin-vehicle-id').value;
+            const brand = document.getElementById('admin-veh-brand').value;
+            const model = document.getElementById('admin-veh-model').value;
+            const year = parseInt(document.getElementById('admin-veh-year').value);
+            const licensePlate = document.getElementById('admin-veh-plate').value;
+            const category = document.getElementById('admin-veh-category').value;
+            const transmission = document.getElementById('admin-veh-transmission').value;
+            const fuelType = document.getElementById('admin-veh-fuel').value;
+            const seats = parseInt(document.getElementById('admin-veh-seats').value);
+            const dailyRate = parseFloat(document.getElementById('admin-veh-rate').value);
+            
+            const payload = { brand, model, year, licensePlate, category, transmission, fuelType, seats, dailyRate };
+            
+            try {
+                let response;
+                if (id) {
+                    response = await fetch(`${API_BASE_URL}/vehicles/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify(payload)
+                    });
+                } else {
+                    response = await fetch(`${API_BASE_URL}/vehicles`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify(payload)
+                    });
+                }
+                
+                if (response.ok) {
+                    alert('Veículo salvo com sucesso!');
+                    vehModal.classList.remove('show');
+                    loadAdminDashboardFleet();
+                    loadVehicles(); // Atualiza frota principal
+                    loadAdminDashboardData(); // Atualiza KPIs
+                } else {
+                    const txt = await response.text();
+                    alert('Erro ao salvar veículo: ' + txt);
+                }
+            } catch(err) {
+                console.error(err);
+                alert('Erro na chamada da API.');
+            }
+        });
+    }
+
+    // 2. Modal de Manutenções
+    const maintModal = document.getElementById('maintenance-form-modal');
+    const closeMaint = document.getElementById('btn-close-maintenance-modal');
+    const maintForm = document.getElementById('maintenance-form');
+    
+    if (closeMaint) closeMaint.addEventListener('click', () => maintModal.classList.remove('show'));
+    
+    if (maintForm) {
+        maintForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const token = localStorage.getItem('jwt_token');
+            if (!token) return;
+            
+            const vehicleId = document.getElementById('maintenance-vehicle-id').value;
+            const type = document.getElementById('maint-type').value;
+            const provider = document.getElementById('maint-provider').value;
+            const cost = parseFloat(document.getElementById('maint-cost').value);
+            const notes = document.getElementById('maint-notes').value;
+            
+            const payload = { vehicleId, type, provider, cost, notes };
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/maintenance`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (response.ok) {
+                    alert('Manutenção registrada! Status do veículo atualizado.');
+                    maintModal.classList.remove('show');
+                    loadAdminDashboardFleet();
+                    loadVehicles();
+                    loadAdminDashboardData();
+                } else {
+                    const txt = await response.text();
+                    alert('Erro ao iniciar manutenção: ' + txt);
+                }
+            } catch(err) {
+                console.error(err);
+            }
+        });
+    }
+
+    // 3. Modal de Devoluções
+    const retModal = document.getElementById('return-form-modal');
+    const closeRet = document.getElementById('btn-close-return-modal');
+    const retForm = document.getElementById('return-form');
+    
+    if (closeRet) closeRet.addEventListener('click', () => retModal.classList.remove('show'));
+    
+    if (retForm) {
+        retForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const token = localStorage.getItem('jwt_token');
+            if (!token) return;
+            
+            const id = document.getElementById('return-rental-id').value;
+            const kilometers = parseInt(document.getElementById('return-km').value);
+            const returnBranchId = document.getElementById('return-branch').value;
+            
+            const payload = { kilometers, returnBranchId };
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/rentals/${id}/return`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    retModal.classList.remove('show');
+                    
+                    // Exibir Recibo Premium Fictício de Proteção
+                    showReceipt(data);
+                    
+                    loadAdminDashboardRentals();
+                    loadAdminDashboardData();
+                    loadVehicles();
+                } else {
+                    const txt = await response.text();
+                    alert('Erro ao finalizar devolução: ' + txt);
+                }
+            } catch(err) {
+                console.error(err);
+            }
+        });
+    }
+
+    // 4. Fechamento de Recibo
+    const receiptModal = document.getElementById('receipt-modal');
+    const closeReceipt = document.getElementById('btn-close-receipt');
+    const closeReceiptBtn = document.getElementById('btn-close-receipt-btn');
+    
+    const hideReceipt = () => receiptModal.classList.remove('show');
+    if (closeReceipt) closeReceipt.addEventListener('click', hideReceipt);
+    if (closeReceiptBtn) closeReceiptBtn.addEventListener('click', hideReceipt);
+}
+
+function showReceipt(rental) {
+    const modal = document.getElementById('receipt-modal');
+    if (!modal) return;
+    
+    // Popula campos com privacidade estrita
+    document.getElementById('receipt-id').textContent = rental.id.substring(0, 8).toUpperCase();
+    document.getElementById('receipt-client').textContent = rental.user ? abbreviateName(rental.user.fullName) : 'Cliente Anonimizado';
+    document.getElementById('receipt-car').textContent = rental.vehicle ? `${rental.vehicle.brand} ${rental.vehicle.model}` : 'Veículo';
+    document.getElementById('receipt-km-start').textContent = `${rental.vehicle ? rental.vehicle.kilometers - 120 : 0} km`; // Simulação
+    document.getElementById('receipt-km-end').textContent = `${rental.vehicle ? rental.vehicle.kilometers : 0} km`;
+    
+    // Cálculo financeiro simulado/real vindo do backend
+    const days = Math.max(1, Math.round((new Date(rental.returnDate) - new Date(rental.pickupDate)) / (1000 * 60 * 60 * 24)));
+    document.getElementById('receipt-days').textContent = days;
+    
+    const rate = rental.vehicle ? rental.vehicle.dailyRate : 0;
+    const subtotal = rate * days;
+    document.getElementById('receipt-subtotal').textContent = subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    
+    const fines = rental.fines || 0;
+    document.getElementById('receipt-fines').textContent = fines.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    
+    const total = subtotal + fines;
+    document.getElementById('receipt-total').textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    
+    modal.classList.add('show');
 }
 
 function openAdminDashboard() {
@@ -1036,7 +1264,12 @@ async function loadAdminDashboardData() {
         console.error('Erro ao carregar métricas do dashboard:', e);
     }
     
-    // 2. Carrega tabela de veículos
+    // 2. Inicializa as duas tabelas principais da primeira aba
+    loadAdminDashboardFleet();
+    loadAdminDashboardCustomers();
+}
+
+async function loadAdminDashboardFleet() {
     try {
         const response = await fetch(`${API_BASE_URL}/vehicles`);
         if (response.ok) {
@@ -1078,47 +1311,192 @@ async function loadAdminDashboardData() {
                 const tdRate = document.createElement('td');
                 tdRate.textContent = parseFloat(v.dailyRate).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
                 
+                const tdActions = document.createElement('td');
+                const btnGroup = document.createElement('div');
+                btnGroup.className = 'admin-action-btn-group';
+                
+                const btnEdit = document.createElement('button');
+                btnEdit.className = 'btn-admin-action';
+                btnEdit.innerHTML = '<i data-lucide="edit-3" style="width: 12px; height: 12px; vertical-align: middle;"></i> ✏️';
+                btnEdit.title = 'Editar Diária e Dados';
+                btnEdit.addEventListener('click', () => {
+                    document.getElementById('admin-vehicle-id').value = v.id;
+                    document.getElementById('admin-veh-brand').value = v.brand;
+                    document.getElementById('admin-veh-model').value = v.model;
+                    document.getElementById('admin-veh-year').value = v.year;
+                    document.getElementById('admin-veh-plate').value = v.licensePlate;
+                    document.getElementById('admin-veh-category').value = v.category;
+                    document.getElementById('admin-veh-transmission').value = v.transmission;
+                    document.getElementById('admin-veh-fuel').value = v.fuelType;
+                    document.getElementById('admin-veh-seats').value = v.seats;
+                    document.getElementById('admin-veh-rate').value = v.dailyRate;
+                    document.getElementById('vehicle-modal-title').textContent = 'Editar Veículo';
+                    document.getElementById('vehicle-form-modal').classList.add('show');
+                });
+                
+                const btnMaint = document.createElement('button');
+                btnMaint.className = 'btn-admin-action btn-maint';
+                btnMaint.innerHTML = '<i data-lucide="tool" style="width: 12px; height: 12px; vertical-align: middle;"></i> 🔧';
+                btnMaint.title = 'Registrar Manutenção';
+                btnMaint.addEventListener('click', () => {
+                    document.getElementById('maintenance-vehicle-id').value = v.id;
+                    document.getElementById('maint-notes').value = '';
+                    document.getElementById('maintenance-form-modal').classList.add('show');
+                });
+                
+                btnGroup.appendChild(btnEdit);
+                btnGroup.appendChild(btnMaint);
+                tdActions.appendChild(btnGroup);
+                
                 tr.appendChild(tdName);
                 tr.appendChild(tdPlate);
                 tr.appendChild(tdCategory);
                 tr.appendChild(tdStatus);
                 tr.appendChild(tdRate);
+                tr.appendChild(tdActions);
                 
                 tbody.appendChild(tr);
             });
+            lucide.createIcons();
         }
     } catch(e) {
         console.error('Erro ao carregar tabela de veículos no dashboard:', e);
     }
+}
+
+async function loadAdminDashboardRentals() {
+    const token = localStorage.getItem('jwt_token');
+    if (!token) return;
     
-    // 3. Carrega tabela de clientes (Simulação rica do portfólio conforme AGENTS.md)
+    try {
+        const response = await fetch(`${API_BASE_URL}/rentals`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            const rentals = await response.json();
+            const tbody = document.querySelector('#admin-rentals-table tbody');
+            tbody.innerHTML = '';
+            
+            if (rentals && rentals.length > 0) {
+                rentals.forEach(r => {
+                    const tr = document.createElement('tr');
+                    
+                    const tdClient = document.createElement('td');
+                    tdClient.style.fontWeight = '600';
+                    tdClient.textContent = r.user ? abbreviateName(r.user.fullName) : 'Cliente Fictício';
+                    
+                    const tdVehicle = document.createElement('td');
+                    tdVehicle.textContent = r.vehicle ? `${r.vehicle.brand} ${r.vehicle.model}` : 'Veículo';
+                    
+                    const tdPickup = document.createElement('td');
+                    tdPickup.textContent = new Date(r.pickupDate).toLocaleString('pt-BR');
+                    
+                    const tdReturn = document.createElement('td');
+                    tdReturn.textContent = new Date(r.returnDate).toLocaleString('pt-BR');
+                    
+                    const tdStatus = document.createElement('td');
+                    const statusBadge = document.createElement('span');
+                    statusBadge.className = 'badge';
+                    
+                    if (r.status === 'ACTIVE') {
+                        statusBadge.className += ' badge-primary';
+                        statusBadge.textContent = 'Ativo';
+                    } else if (r.status === 'COMPLETED') {
+                        statusBadge.className += ' badge-primary';
+                        statusBadge.style.backgroundColor = 'var(--success)';
+                        statusBadge.textContent = 'Concluído';
+                    } else {
+                        statusBadge.className += ' badge-primary';
+                        statusBadge.style.backgroundColor = 'var(--text-light)';
+                        statusBadge.textContent = 'Cancelado';
+                    }
+                    tdStatus.appendChild(statusBadge);
+                    
+                    const tdActions = document.createElement('td');
+                    if (r.status === 'ACTIVE') {
+                        const btnReturn = document.createElement('button');
+                        btnReturn.className = 'btn-admin-action';
+                        btnReturn.innerHTML = 'Devolver';
+                        btnReturn.addEventListener('click', () => {
+                            openReturnModal(r);
+                        });
+                        tdActions.appendChild(btnReturn);
+                    } else {
+                        tdActions.textContent = 'Sem Ações';
+                        tdActions.style.color = 'var(--text-light)';
+                    }
+                    
+                    tr.appendChild(tdClient);
+                    tr.appendChild(tdVehicle);
+                    tr.appendChild(tdPickup);
+                    tr.appendChild(tdReturn);
+                    tr.appendChild(tdStatus);
+                    tr.appendChild(tdActions);
+                    
+                    tbody.appendChild(tr);
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-light);">Nenhum aluguel registrado.</td></tr>';
+            }
+        }
+    } catch(e) {
+        console.error('Erro ao carregar aluguéis no dashboard:', e);
+    }
+}
+
+function openReturnModal(rental) {
+    const modal = document.getElementById('return-form-modal');
+    if (!modal) return;
+    
+    document.getElementById('return-rental-id').value = rental.id;
+    document.getElementById('return-km').value = rental.vehicle ? rental.vehicle.kilometers : 0;
+    
+    const branchSelect = document.getElementById('return-branch');
+    branchSelect.innerHTML = '';
+    
+    if (cachedBranches && cachedBranches.length > 0) {
+        cachedBranches.forEach(branch => {
+            const opt = document.createElement('option');
+            opt.value = branch.id;
+            opt.textContent = `${branch.name} - ${branch.city}/${branch.state}`;
+            branchSelect.appendChild(opt);
+        });
+    }
+    
+    modal.classList.add('show');
+}
+
+function loadAdminDashboardCustomers() {
     const customersTbody = document.querySelector('#admin-customers-table tbody');
     customersTbody.innerHTML = `
         <tr>
-            <td style="font-weight: 600;">Thiago Gomes de Souza</td>
+            <td style="font-weight: 600;">Thiago G. S.</td>
             <td>***.248.109-**</td>
-            <td>59281736209</td>
+            <td>***.***.209</td>
             <td><span class="badge badge-primary" style="background-color: var(--primary); font-weight: 700;">DIAMANTE</span></td>
             <td style="font-weight: 700; color: var(--primary);">2.400 pts</td>
         </tr>
         <tr>
-            <td style="font-weight: 600;">Maria Clara Fernandes</td>
+            <td style="font-weight: 600;">Maria C. F.</td>
             <td>***.382.901-**</td>
-            <td>90812374612</td>
+            <td>***.***.612</td>
             <td><span class="badge badge-primary" style="background-color: var(--warning); font-weight: 700;">OURO</span></td>
             <td style="font-weight: 700; color: var(--warning);">1.200 pts</td>
         </tr>
         <tr>
-            <td style="font-weight: 600;">Bruno Albuquerque Reis</td>
+            <td style="font-weight: 600;">Bruno A. R.</td>
             <td>***.892.112-**</td>
-            <td>47382910293</td>
+            <td>***.***.293</td>
             <td><span class="badge badge-primary" style="background-color: #3b82f6; font-weight: 700;">PRATA</span></td>
             <td style="font-weight: 700; color: #3b82f6;">600 pts</td>
         </tr>
         <tr>
-            <td style="font-weight: 600;">Ana Julia de Oliveira</td>
+            <td style="font-weight: 600;">Ana J. O.</td>
             <td>***.501.374-**</td>
-            <td>81273946281</td>
+            <td>***.***.281</td>
             <td><span class="badge badge-primary" style="background-color: var(--text-light); font-weight: 700;">BRONZE</span></td>
             <td style="font-weight: 700; color: var(--text-light);">100 pts</td>
         </tr>
