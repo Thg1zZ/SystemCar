@@ -2,7 +2,7 @@
  * RodaLivre - Vanilla JS Application Logic
  */
 
-const API_BASE_URL = 'https://systemcar-j6un.onrender.com/api/v1';
+const API_BASE_URL = 'https://systemcar-backend.onrender.com/api/v1';
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Initializations
