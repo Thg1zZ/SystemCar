@@ -56,8 +56,17 @@ public class RentalService {
         User user = userRepository.findById(currentUser.getId())
                 .orElseThrow(() -> new LocadoraException("Usuário não encontrado"));
 
-        if (user.getCnhExpirationDate() != null && user.getCnhExpirationDate().isBefore(java.time.LocalDate.now())) {
-            throw new LocadoraException("Erro: CNH vencida! Abertura de aluguel bloqueada.");
+        if (request.getPickupDate().isBefore(java.time.LocalDateTime.now().minusMinutes(5))) {
+            throw new LocadoraException("Erro: A data de retirada não pode ser no passado.");
+        }
+
+        if (request.getReturnDate().isBefore(request.getPickupDate())) {
+            throw new LocadoraException("Erro: A data de devolução deve ser posterior à data de retirada.");
+        }
+
+        java.time.LocalDate pickupDate = request.getPickupDate().toLocalDate();
+        if (user.getCnhExpirationDate() != null && user.getCnhExpirationDate().isBefore(pickupDate)) {
+            throw new LocadoraException("Erro: Sua CNH estará vencida na data planejada para a retirada (" + user.getCnhExpirationDate() + ")!");
         }
 
         if (Boolean.TRUE.equals(user.getInadimplente())) {
