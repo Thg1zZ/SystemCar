@@ -3,6 +3,7 @@
  */
 
 let API_BASE_URL = 'https://systemcar-backend.onrender.com/api/v1';
+let currentLanguage = localStorage.getItem('portfolio_lang') || 'pt';
 
 // Função assíncrona para detectar backend local de forma dinâmica e resiliente
 async function detectApiUrl() {
@@ -51,6 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initAdminDashboard(); // Inicializa controle do painel de administração
     loadBranches();
     loadVehicles();
+    updateLanguageTexts(); // Atualiza avisos com a linguagem persistida
 
     // 2. Event Listeners
     setupSearchForm();
@@ -93,18 +95,34 @@ function showPortfolioModal() {
     const allBtns = [btnPt, btnEn, btnEs, btnZh];
     const allContents = [ptContent, enContent, esContent, zhContent];
     
-    const switchLanguage = (activeBtn, activeContent) => {
+    const switchLanguage = (activeBtn, activeContent, langCode) => {
         allBtns.forEach(btn => btn.classList.remove('active'));
         allContents.forEach(content => content.style.display = 'none');
         activeBtn.classList.add('active');
         activeContent.style.display = 'block';
+        
+        // Atualiza e persiste o idioma escolhido
+        currentLanguage = langCode;
+        localStorage.setItem('portfolio_lang', langCode);
+        updateLanguageTexts();
     };
     
     // Toggles de idiomas em tempo real
-    btnPt.addEventListener('click', () => switchLanguage(btnPt, ptContent));
-    btnEn.addEventListener('click', () => switchLanguage(btnEn, enContent));
-    btnEs.addEventListener('click', () => switchLanguage(btnEs, esContent));
-    btnZh.addEventListener('click', () => switchLanguage(btnZh, zhContent));
+    btnPt.addEventListener('click', () => switchLanguage(btnPt, ptContent, 'pt'));
+    btnEn.addEventListener('click', () => switchLanguage(btnEn, enContent, 'en'));
+    btnEs.addEventListener('click', () => switchLanguage(btnEs, esContent, 'es'));
+    btnZh.addEventListener('click', () => switchLanguage(btnZh, zhContent, 'zh'));
+    
+    // Inicia na linguagem previamente salva
+    if (currentLanguage === 'en') {
+        switchLanguage(btnEn, enContent, 'en');
+    } else if (currentLanguage === 'es') {
+        switchLanguage(btnEs, esContent, 'es');
+    } else if (currentLanguage === 'zh') {
+        switchLanguage(btnZh, zhContent, 'zh');
+    } else {
+        switchLanguage(btnPt, ptContent, 'pt');
+    }
     
     // Botões de consentimento/aceite para liberação do site
     const acceptTerms = () => {
@@ -1501,4 +1519,51 @@ function loadAdminDashboardCustomers() {
             <td style="font-weight: 700; color: var(--text-light);">100 pts</td>
         </tr>
     `;
+}
+
+// Dicionário de Traduções para Avisos de Portfólio Fictício
+const portfolioTranslations = {
+    pt: {
+        badge: '<strong>Ambiente de Portfólio</strong><span>Sistema fictício para fins demonstrativos.</span>',
+        banner: '⚠️ AMBIENTE DE PORTFÓLIO: Todos os dados cadastrados, aluguéis e devoluções são 100% FICTÍCIOS. Nomes e CNHs mascarados com segurança.',
+        receiptWarning: '⚠️ <strong>ATENÇÃO:</strong> Esta transação foi efetuada em ambiente simulado de testes (in-memory). Nenhum valor financeiro real foi cobrado.'
+    },
+    en: {
+        badge: '<strong>Portfolio Environment</strong><span>Fictitious system for demonstration purposes.</span>',
+        banner: '⚠️ PORTFOLIO ENVIRONMENT: All registered data, rentals, and returns are 100% FICTITIOUS. Names and CNHs securely masked.',
+        receiptWarning: '⚠️ <strong>WARNING:</strong> This transaction was performed in a simulated test environment (in-memory). No real financial value was charged.'
+    },
+    es: {
+        badge: '<strong>Entorno de Portafolio</strong><span>Sistema ficticio para fines demostrativos.</span>',
+        banner: '⚠️ ENTORNO DE PORTAFOLIO: Todos los datos registrados, alquileres y devoluciones son 100% FICTICIOS. Nombres y CNHs enmascarados con seguridad.',
+        receiptWarning: '⚠️ <strong>ATENCIÓN:</strong> Esta transacción se realizó en un entorno de prueba simulado (in-memory). No se cobró ningún valor financiero real.'
+    },
+    zh: {
+        badge: '<strong>作品集演示环境</strong><span>用于设计 & 开发演示的虚构系统。</span>',
+        banner: '⚠️ 作品集演示环境：所有注册数据、租赁和退还记录均为 100% 虚构。姓名和驾驶执照已安全脱敏。',
+        receiptWarning: '⚠️ <strong>注意：</strong> 本次交易在模拟测试环境（内存驻留）中完成。未收取任何实际资金。'
+    }
+};
+
+function updateLanguageTexts() {
+    const lang = currentLanguage || 'pt';
+    const t = portfolioTranslations[lang] || portfolioTranslations.pt;
+    
+    // 1. Atualiza Badge Flutuante
+    const badgeText = document.querySelector('.portfolio-badge .badge-text');
+    if (badgeText) {
+        badgeText.innerHTML = t.badge;
+    }
+    
+    // 2. Atualiza Banner de Portfólio do Painel Admin
+    const adminBanner = document.querySelector('.admin-portfolio-banner');
+    if (adminBanner) {
+        adminBanner.textContent = t.banner;
+    }
+    
+    // 3. Atualiza Alerta de Transação Fictícia no modal de Recibo de Devolução
+    const receiptWarning = document.querySelector('#receipt-modal p[style*="font-size: 0.78rem"]');
+    if (receiptWarning) {
+        receiptWarning.innerHTML = t.receiptWarning;
+    }
 }
