@@ -198,20 +198,18 @@ async function loadVehicles() {
 
                 const img = document.createElement('img');
                  
-                // Mapeia imagens locais de altíssima fidelidade baseado na categoria do banco
+                // Mapeia imagens locais de altíssima fidelidade de forma extremamente segura
                 let vehicleImg = 'img/compact.png';
-                if (vehicle.category) {
+                if (vehicle.category && typeof vehicle.category === 'string') {
                     const cat = vehicle.category.toUpperCase();
                     if (cat.includes('SUV') || cat.includes('TRUCK')) {
                         vehicleImg = 'img/suv.png';
-                    } else if (cat.includes('INTERMEDIATE') || cat.includes('FULL_SIZE') || cat.includes('LUXURY') || cat.includes('SPORTS')) {
+                    } else if (cat.includes('INTERMEDIATE') || cat.includes('FULL_SIZE') || cat.includes('LUXURY') || cat.includes('SPORTS') || cat.includes('SEDAN') || cat.includes('VAN')) {
                         vehicleImg = 'img/sedan.png';
-                    } else {
-                        vehicleImg = 'img/compact.png';
                     }
                 }
                 img.src = vehicleImg;
-                img.alt = vehicle.model;
+                img.alt = vehicle.model || 'Carro';
 
                 const badge = document.createElement('span');
                 badge.className = 'badge badge-primary';
