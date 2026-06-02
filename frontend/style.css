@@ -1340,3 +1340,363 @@ a {
 .info-modal-scroll::-webkit-scrollbar-thumb:hover {
     background: #a8a8a8;
 }
+
+/* ==========================================================================
+   Admin Dashboard Premium Screen & Sidebar Layout
+   ========================================================================== */
+
+.admin-dashboard-overlay {
+    background: rgba(11, 15, 25, 0.82) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    z-index: 1000000 !important; /* Acima de tudo e do header */
+}
+
+.admin-dashboard-container {
+    width: 95% !important;
+    height: 90vh !important;
+    max-width: 1400px !important;
+    background: var(--bg-main) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg) !important;
+    display: flex !important;
+    overflow: hidden !important;
+    padding: 0 !important; /* Sem padding interno do card */
+    position: relative;
+    color: var(--text-main);
+    transform: scale(0.95);
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.admin-dashboard-overlay.show .admin-dashboard-container {
+    transform: scale(1);
+}
+
+.admin-dashboard-close {
+    position: absolute !important;
+    top: 1rem !important;
+    right: 1.5rem !important;
+    z-index: 10;
+}
+
+/* Sidebar Styling */
+.admin-sidebar {
+    width: 260px;
+    background-color: var(--bg-light);
+    border-right: 1px solid var(--border-color);
+    padding: 2.5rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+    flex-shrink: 0;
+}
+
+.admin-logo-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    align-items: center;
+}
+
+.admin-logo-wrapper img {
+    height: 60px;
+    width: auto;
+    object-fit: contain;
+}
+
+.admin-badge {
+    background-color: var(--primary-light);
+    color: var(--primary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-full);
+}
+
+.admin-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.admin-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.875rem 1.2rem;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    color: var(--text-light);
+    transition: var(--transition);
+}
+
+.admin-nav-item:hover {
+    color: var(--primary);
+    background-color: rgba(255, 90, 31, 0.05);
+}
+
+.admin-nav-item.active {
+    color: white;
+    background-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(255, 90, 31, 0.25);
+}
+
+.admin-nav-item i {
+    width: 18px;
+    height: 18px;
+}
+
+/* Main Content Area */
+.admin-main-content {
+    flex-grow: 1;
+    padding: 3rem 2.5rem;
+    overflow-y: auto;
+    background-color: var(--bg-main);
+}
+
+.admin-page-title {
+    font-size: 1.85rem;
+    color: var(--secondary);
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--bg-light);
+    padding-bottom: 1rem;
+}
+
+/* KPI Cards Layout */
+.admin-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.kpi-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+}
+
+.kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-light);
+}
+
+.kpi-icon-wrapper {
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-md);
+    background-color: #EEF2F6;
+    color: var(--secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.kpi-icon-wrapper i {
+    width: 24px;
+    height: 24px;
+}
+
+.kpi-icon-wrapper.kpi-revenue {
+    background-color: #ECFDF5;
+    color: var(--success);
+}
+
+.kpi-icon-wrapper.kpi-vehicles {
+    background-color: #EFF6FF;
+    color: #3B82F6;
+}
+
+.kpi-icon-wrapper.kpi-customers {
+    background-color: #FEF3C7;
+    color: var(--warning);
+}
+
+.kpi-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.kpi-title {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.kpi-value {
+    font-size: 1.45rem;
+    font-weight: 750;
+    color: var(--secondary);
+}
+
+/* Visual Progress Section */
+.admin-visual-row {
+    margin-bottom: 2.5rem;
+}
+
+.visual-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.visual-card h3 {
+    font-size: 1.15rem;
+    color: var(--secondary);
+    margin-bottom: 1.5rem;
+}
+
+.status-distribution-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.distribution-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+}
+
+.distribution-label {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-weight: 600;
+    width: 140px;
+    font-size: 0.95rem;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.dot-available { background-color: var(--success); }
+.dot-rented { background-color: var(--primary); }
+.dot-maintenance { background-color: var(--danger); }
+
+.distribution-progress {
+    flex-grow: 1;
+    height: 8px;
+    background-color: var(--bg-light);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bg-success { background-color: var(--success); }
+.bg-primary { background-color: var(--primary); }
+.bg-danger { background-color: var(--danger); }
+
+.distribution-count {
+    font-weight: 700;
+    font-size: 1.1rem;
+    width: 30px;
+    text-align: right;
+    color: var(--secondary);
+}
+
+/* Tabs & Tables Styling */
+.admin-tab-content {
+    display: none;
+}
+
+.admin-tab-content.active {
+    display: block;
+}
+
+.admin-table-container {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.95rem;
+}
+
+.admin-table th {
+    background-color: var(--bg-light);
+    color: var(--secondary);
+    font-weight: 700;
+    padding: 1rem 1.25rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.admin-table td {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-main);
+}
+
+.admin-table tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-table tr:hover td {
+    background-color: var(--bg-light);
+}
+
+/* CSS Responsivo para Admin Dashboard */
+@media (max-width: 900px) {
+    .admin-dashboard-container {
+        flex-direction: column !important;
+        height: 95vh !important;
+    }
+    .admin-sidebar {
+        width: 100% !important;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        padding: 1.5rem;
+        flex-direction: row !important;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1.5rem;
+    }
+    .admin-logo-wrapper {
+        flex-direction: row;
+        align-items: center;
+        gap: 1rem;
+    }
+    .admin-logo-wrapper img {
+        height: 40px;
+    }
+    .admin-nav {
+        flex-direction: row !important;
+        gap: 0.5rem;
+    }
+    .admin-nav-item {
+        padding: 0.5rem 1rem !important;
+        font-size: 0.85rem;
+    }
+    .admin-main-content {
+        padding: 2rem 1.5rem !important;
+    }
+}
+

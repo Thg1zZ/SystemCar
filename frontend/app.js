@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initInfoModals(); // Inicializa ajuda, termos, privacidade e sobre nós
     initAuth();       // Inicializa login, cadastro e visualização do cabeçalho
     initBooking();    // Inicializa fechamento de modal e submit de reservas
+    initAdminDashboard(); // Inicializa controle do painel de administração
     loadBranches();
     loadVehicles();
 
@@ -639,12 +640,37 @@ function updateAuthHeader() {
             const userInfo = JSON.parse(userInfoStr);
             const firstName = userInfo.fullName.split(' ')[0];
             
-            authContainer.innerHTML = `
-                <span class="user-greeting" style="color: var(--text-main); font-weight: 500; margin-right: 1.2rem; font-size: 0.95rem;">
-                    Olá, <strong style="color: var(--primary); font-weight: 700;">${firstName}</strong>
-                </span>
-                <button class="btn btn-outline" id="btn-logout" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Sair</button>
-            `;
+            // Verifica se o usuário tem permissão de Admin ou Operador
+            const isAdmin = userInfo.roles && (
+                userInfo.roles.includes('ROLE_ADMIN') || 
+                userInfo.roles.includes('ROLE_OPERATOR') ||
+                userInfo.roles.includes('ADMIN') ||
+                userInfo.roles.includes('OPERATOR')
+            );
+            
+            if (isAdmin) {
+                authContainer.innerHTML = `
+                    <span class="user-greeting" style="color: var(--text-main); font-weight: 500; margin-right: 1.2rem; font-size: 0.95rem;">
+                        Olá, <strong style="color: var(--primary); font-weight: 700;">${firstName} (Admin)</strong>
+                    </span>
+                    <button class="btn btn-primary" id="btn-admin-dashboard" style="padding: 0.5rem 1rem; font-size: 0.9rem; margin-right: 0.8rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+                        <i data-lucide="layout-dashboard" style="width: 16px; height: 16px;"></i> Painel Admin
+                    </button>
+                    <button class="btn btn-outline" id="btn-logout" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Sair</button>
+                `;
+                
+                // Abre o painel
+                document.getElementById('btn-admin-dashboard').addEventListener('click', () => {
+                    openAdminDashboard();
+                });
+            } else {
+                authContainer.innerHTML = `
+                    <span class="user-greeting" style="color: var(--text-main); font-weight: 500; margin-right: 1.2rem; font-size: 0.95rem;">
+                        Olá, <strong style="color: var(--primary); font-weight: 700;">${firstName}</strong>
+                    </span>
+                    <button class="btn btn-outline" id="btn-logout" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Sair</button>
+                `;
+            }
             
             // Logout click listener
             document.getElementById('btn-logout').addEventListener('click', () => {
@@ -654,6 +680,8 @@ function updateAuthHeader() {
                 currentUserInfo = null;
                 updateAuthHeader();
             });
+            
+            lucide.createIcons();
             
         } catch(e) {
             localStorage.removeItem('jwt_token');
@@ -911,4 +939,188 @@ function openBookingModal(vehicle) {
         pickupSelect.value = heroPickupBranch;
         returnSelect.value = heroPickupBranch;
     }
+}
+
+/**
+ * Admin Dashboard System
+ */
+function initAdminDashboard() {
+    const closeBtn = document.getElementById('btn-close-admin-dashboard');
+    const modal = document.getElementById('admin-dashboard-modal');
+    
+    if (closeBtn && modal) {
+        closeBtn.addEventListener('click', () => {
+            modal.classList.remove('show');
+        });
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('show');
+            }
+        });
+    }
+    
+    // Configura navegação de abas
+    const navItems = document.querySelectorAll('.admin-nav-item');
+    const tabContents = document.querySelectorAll('.admin-tab-content');
+    
+    navItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            navItems.forEach(n => n.classList.remove('active'));
+            tabContents.forEach(t => t.classList.remove('active'));
+            
+            item.classList.add('active');
+            const tabId = item.getAttribute('data-tab');
+            const targetTab = document.getElementById(tabId);
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+        });
+    });
+}
+
+function openAdminDashboard() {
+    const modal = document.getElementById('admin-dashboard-modal');
+    if (!modal) return;
+    
+    modal.classList.add('show');
+    
+    // Reseta abas para a primeira
+    document.querySelectorAll('.admin-nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.admin-tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelector('.admin-nav-item[data-tab="tab-overview"]').classList.add('active');
+    document.getElementById('tab-overview').classList.add('active');
+    
+    // Carrega dados dinâmicos do Dashboard
+    loadAdminDashboardData();
+}
+
+async function loadAdminDashboardData() {
+    const token = localStorage.getItem('jwt_token');
+    if (!token) return;
+    
+    // 1. Carrega métricas da API oficial
+    try {
+        const response = await fetch(`${API_BASE_URL}/dashboard/metrics`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            const metrics = await response.json();
+            
+            // Renderiza KPIs
+            document.getElementById('kpi-active-rentals').textContent = metrics.activeRentals;
+            document.getElementById('kpi-total-customers').textContent = metrics.totalCustomers;
+            document.getElementById('kpi-total-vehicles').textContent = `${metrics.availableVehicles + metrics.rentedVehicles + metrics.vehiclesInMaintenance} / ${metrics.totalVehicles}`;
+            
+            const revenue = metrics.currentMonthRevenue ? parseFloat(metrics.currentMonthRevenue).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'R$ 0,00';
+            document.getElementById('kpi-revenue').textContent = revenue;
+            
+            // Renderiza distribuição da frota
+            const total = metrics.totalVehicles || 1;
+            const pctAvailable = Math.round((metrics.availableVehicles / total) * 100);
+            const pctRented = Math.round((metrics.rentedVehicles / total) * 100);
+            const pctMaintenance = Math.round((metrics.vehiclesInMaintenance / total) * 100);
+            
+            document.getElementById('progress-available').style.width = `${pctAvailable}%`;
+            document.getElementById('progress-rented').style.width = `${pctRented}%`;
+            document.getElementById('progress-maintenance').style.width = `${pctMaintenance}%`;
+            
+            document.getElementById('count-available').textContent = metrics.availableVehicles;
+            document.getElementById('count-rented').textContent = metrics.rentedVehicles;
+            document.getElementById('count-maintenance').textContent = metrics.vehiclesInMaintenance;
+        }
+    } catch(e) {
+        console.error('Erro ao carregar métricas do dashboard:', e);
+    }
+    
+    // 2. Carrega tabela de veículos
+    try {
+        const response = await fetch(`${API_BASE_URL}/vehicles`);
+        if (response.ok) {
+            const vehicles = await response.json();
+            const tbody = document.querySelector('#admin-vehicles-table tbody');
+            tbody.innerHTML = '';
+            
+            vehicles.forEach(v => {
+                const tr = document.createElement('tr');
+                
+                const tdName = document.createElement('td');
+                tdName.style.fontWeight = '600';
+                tdName.textContent = `${v.brand} ${v.model}`;
+                
+                const tdPlate = document.createElement('td');
+                tdPlate.textContent = v.licensePlate || 'N/A';
+                
+                const tdCategory = document.createElement('td');
+                tdCategory.textContent = v.category;
+                
+                const tdStatus = document.createElement('td');
+                const statusBadge = document.createElement('span');
+                statusBadge.className = 'badge';
+                
+                if (v.status === 'AVAILABLE') {
+                    statusBadge.className += ' badge-primary';
+                    statusBadge.style.backgroundColor = 'var(--success)';
+                    statusBadge.textContent = 'Disponível';
+                } else if (v.status === 'RENTED') {
+                    statusBadge.className += ' badge-primary';
+                    statusBadge.textContent = 'Alugado';
+                } else {
+                    statusBadge.className += ' badge-primary';
+                    statusBadge.style.backgroundColor = 'var(--danger)';
+                    statusBadge.textContent = 'Manutenção';
+                }
+                tdStatus.appendChild(statusBadge);
+                
+                const tdRate = document.createElement('td');
+                tdRate.textContent = parseFloat(v.dailyRate).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+                
+                tr.appendChild(tdName);
+                tr.appendChild(tdPlate);
+                tr.appendChild(tdCategory);
+                tr.appendChild(tdStatus);
+                tr.appendChild(tdRate);
+                
+                tbody.appendChild(tr);
+            });
+        }
+    } catch(e) {
+        console.error('Erro ao carregar tabela de veículos no dashboard:', e);
+    }
+    
+    // 3. Carrega tabela de clientes (Simulação rica do portfólio conforme AGENTS.md)
+    const customersTbody = document.querySelector('#admin-customers-table tbody');
+    customersTbody.innerHTML = `
+        <tr>
+            <td style="font-weight: 600;">Thiago Gomes de Souza</td>
+            <td>***.248.109-**</td>
+            <td>59281736209</td>
+            <td><span class="badge badge-primary" style="background-color: var(--primary); font-weight: 700;">DIAMANTE</span></td>
+            <td style="font-weight: 700; color: var(--primary);">2.400 pts</td>
+        </tr>
+        <tr>
+            <td style="font-weight: 600;">Maria Clara Fernandes</td>
+            <td>***.382.901-**</td>
+            <td>90812374612</td>
+            <td><span class="badge badge-primary" style="background-color: var(--warning); font-weight: 700;">OURO</span></td>
+            <td style="font-weight: 700; color: var(--warning);">1.200 pts</td>
+        </tr>
+        <tr>
+            <td style="font-weight: 600;">Bruno Albuquerque Reis</td>
+            <td>***.892.112-**</td>
+            <td>47382910293</td>
+            <td><span class="badge badge-primary" style="background-color: #3b82f6; font-weight: 700;">PRATA</span></td>
+            <td style="font-weight: 700; color: #3b82f6;">600 pts</td>
+        </tr>
+        <tr>
+            <td style="font-weight: 600;">Ana Julia de Oliveira</td>
+            <td>***.501.374-**</td>
+            <td>81273946281</td>
+            <td><span class="badge badge-primary" style="background-color: var(--text-light); font-weight: 700;">BRONZE</span></td>
+            <td style="font-weight: 700; color: var(--text-light);">100 pts</td>
+        </tr>
+    `;
 }

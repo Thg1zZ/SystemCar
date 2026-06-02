@@ -549,6 +549,148 @@
         </div>
     </div>
 
+    <!-- Admin Dashboard Modal (Full Screen) -->
+    <div id="admin-dashboard-modal" class="info-modal-overlay admin-dashboard-overlay">
+        <div class="admin-dashboard-container glass-panel">
+            <button class="info-modal-close admin-dashboard-close" id="btn-close-admin-dashboard">&times;</button>
+            
+            <aside class="admin-sidebar">
+                <div class="admin-logo-wrapper">
+                    <img src="img/logo.png" alt="RodaLivre Logo">
+                    <span class="admin-badge">Painel Admin</span>
+                </div>
+                <nav class="admin-nav">
+                    <a href="#" class="admin-nav-item active" data-tab="tab-overview">
+                        <i data-lucide="layout-dashboard"></i> Visão Geral
+                    </a>
+                    <a href="#" class="admin-nav-item" data-tab="tab-fleet">
+                        <i data-lucide="car"></i> Veículos & Frota
+                    </a>
+                    <a href="#" class="admin-nav-item" data-tab="tab-customers">
+                        <i data-lucide="users"></i> Clientes
+                    </a>
+                </nav>
+            </aside>
+            
+            <main class="admin-main-content">
+                <!-- Overview Tab -->
+                <div id="tab-overview" class="admin-tab-content active">
+                    <h2 class="admin-page-title">Visão Geral do Sistema</h2>
+                    
+                    <!-- KPI Grid -->
+                    <div class="admin-kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-icon-wrapper"><i data-lucide="calendar-check"></i></div>
+                            <div class="kpi-info">
+                                <span class="kpi-title">Aluguéis Ativos</span>
+                                <h3 class="kpi-value" id="kpi-active-rentals">0</h3>
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon-wrapper kpi-revenue"><i data-lucide="dollar-sign"></i></div>
+                            <div class="kpi-info">
+                                <span class="kpi-title">Receita Geral</span>
+                                <h3 class="kpi-value" id="kpi-revenue">R$ 0,00</h3>
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon-wrapper kpi-vehicles"><i data-lucide="car"></i></div>
+                            <div class="kpi-info">
+                                <span class="kpi-title">Frota de Veículos</span>
+                                <h3 class="kpi-value" id="kpi-total-vehicles">0 / 0</h3>
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon-wrapper kpi-customers"><i data-lucide="users"></i></div>
+                            <div class="kpi-info">
+                                <span class="kpi-title">Total de Clientes</span>
+                                <h3 class="kpi-value" id="kpi-total-customers">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Visual Progress & Status -->
+                    <div class="admin-visual-row">
+                        <div class="visual-card status-distribution">
+                            <h3>Distribuição de Veículos</h3>
+                            <div class="status-distribution-wrapper">
+                                <div class="distribution-item">
+                                    <div class="distribution-label">
+                                        <span class="dot dot-available"></span> Disponíveis
+                                    </div>
+                                    <div class="distribution-progress">
+                                        <div class="progress-bar bg-success" id="progress-available" style="width: 0%;"></div>
+                                    </div>
+                                    <span class="distribution-count" id="count-available">0</span>
+                                </div>
+                                <div class="distribution-item">
+                                    <div class="distribution-label">
+                                        <span class="dot dot-rented"></span> Alugados
+                                    </div>
+                                    <div class="distribution-progress">
+                                        <div class="progress-bar bg-primary" id="progress-rented" style="width: 0%;"></div>
+                                    </div>
+                                    <span class="distribution-count" id="count-rented">0</span>
+                                </div>
+                                <div class="distribution-item">
+                                    <div class="distribution-label">
+                                        <span class="dot dot-maintenance"></span> Em Manutenção
+                                    </div>
+                                    <div class="distribution-progress">
+                                        <div class="progress-bar bg-danger" id="progress-maintenance" style="width: 0%;"></div>
+                                    </div>
+                                    <span class="distribution-count" id="count-maintenance">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Fleet Tab -->
+                <div id="tab-fleet" class="admin-tab-content">
+                    <h2 class="admin-page-title">Gestão de Veículos & Frota</h2>
+                    <div class="admin-table-container">
+                        <table class="admin-table" id="admin-vehicles-table">
+                            <thead>
+                                <tr>
+                                    <th>Veículo</th>
+                                    <th>Placa</th>
+                                    <th>Categoria</th>
+                                    <th>Status</th>
+                                    <th>Diária (R$)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Populado via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Customers Tab -->
+                <div id="tab-customers" class="admin-tab-content">
+                    <h2 class="admin-page-title">Gestão de Clientes</h2>
+                    <div class="admin-table-container">
+                        <table class="admin-table" id="admin-customers-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>CPF</th>
+                                    <th>CNH</th>
+                                    <th>Nível Fidelidade</th>
+                                    <th>Pontos</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Populado via JavaScript ou Simulado -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
     <script src="app.js"></script>
     <script>
         lucide.createIcons();
