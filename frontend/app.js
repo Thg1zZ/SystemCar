@@ -604,8 +604,8 @@ function initAuth() {
                         fullName,
                         email,
                         password,
-                        cpf,
-                        cnh,
+                        cpf: cpf.replace(/\D/g, ''),
+                        cnh: cnh.replace(/\D/g, ''),
                         cnhExpirationDate,
                         birthDate
                     })
@@ -616,8 +616,11 @@ function initAuth() {
                     let errMsg = 'Erro ao realizar cadastro.';
                     try {
                         const errJson = JSON.parse(errText);
-                        if (errJson.message) errMsg = errJson.message;
-                        else if (typeof errJson === 'string') errMsg = errJson;
+                        if (errJson.error) errMsg = errJson.error;
+                        else if (errJson.message) errMsg = errJson.message;
+                        else if (Object.keys(errJson).length > 0) {
+                            errMsg = Object.values(errJson).join(' | ');
+                        }
                     } catch(e) {
                         if (errText) errMsg = errText;
                     }
