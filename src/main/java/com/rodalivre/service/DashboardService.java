@@ -29,7 +29,8 @@ public class DashboardService {
         long activeRentals = rentalRepository.countByStatus(RentalStatus.ACTIVE);
         long totalCustomers = userRepository.countByRole(UserRole.CLIENT);
         
-        BigDecimal currentMonthRevenue = rentalRepository.sumCompletedRentalsRevenue();
+        BigDecimal revenue = rentalRepository.sumCompletedRentalsRevenue();
+        BigDecimal currentMonthRevenue = revenue != null ? revenue : BigDecimal.ZERO;
 
         return DashboardMetricsResponse.builder()
                 .totalVehicles(totalVehicles)

@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initAuth();       // Inicializa login, cadastro e visualização do cabeçalho
     initBooking();    // Inicializa fechamento de modal e submit de reservas
     initAdminDashboard(); // Inicializa controle do painel de administração
+    initClientProfile();  // Inicializa o controle do perfil do cliente
     loadBranches();
     loadVehicles();
     updateLanguageTexts(); // Atualiza avisos com a linguagem persistida
@@ -686,8 +687,15 @@ function updateAuthHeader() {
                     <span class="user-greeting" style="color: var(--text-main); font-weight: 500; margin-right: 1.2rem; font-size: 0.95rem;">
                         Olá, <strong style="color: var(--primary); font-weight: 700;">${firstName}</strong>
                     </span>
+                    <button class="btn btn-primary" id="btn-client-profile" style="padding: 0.5rem 1rem; font-size: 0.9rem; margin-right: 0.8rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+                        <i data-lucide="user" style="width: 16px; height: 16px;"></i> Minha Conta
+                    </button>
                     <button class="btn btn-outline" id="btn-logout" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Sair</button>
                 `;
+                
+                document.getElementById('btn-client-profile').addEventListener('click', () => {
+                    openClientProfile();
+                });
             }
             
             // Logout click listener
@@ -989,6 +997,39 @@ function abbreviateName(fullName) {
     return `${parts[0]} ${parts[1][0]}. ${parts[parts.length - 1][0]}.`;
 }
 
+/**
+ * Abre um sub-modal do painel administrativo de forma correta.
+ * Remove o backdrop-filter do overlay principal (que criava um stacking
+ * context bloqueando o z-index dos sub-modais) e exibe o modal alvo.
+ * @param {HTMLElement} modal - O elemento do sub-modal a ser exibido
+ */
+function openAdminSubModal(modal) {
+    if (!modal) return;
+    const adminOverlay = document.getElementById('admin-dashboard-modal');
+    if (adminOverlay) adminOverlay.classList.add('sub-modal-open');
+    modal.classList.add('show');
+}
+
+/**
+ * Fecha um sub-modal do painel administrativo e restaura o backdrop-filter
+ * do overlay principal.
+ * @param {HTMLElement} modal - O elemento do sub-modal a ser fechado
+ */
+function closeAdminSubModal(modal) {
+    if (!modal) return;
+    modal.classList.remove('show');
+    // Aguarda o fim da transição de saída para restaurar o backdrop
+    setTimeout(() => {
+        const adminOverlay = document.getElementById('admin-dashboard-modal');
+        const anySubModalOpen = document.querySelector(
+            '#vehicle-form-modal.show, #maintenance-form-modal.show, #return-form-modal.show, #receipt-modal.show'
+        );
+        if (adminOverlay && !anySubModalOpen) {
+            adminOverlay.classList.remove('sub-modal-open');
+        }
+    }, 420); // Tempo da transição CSS (0.4s)
+}
+
 function initAdminDashboard() {
     const closeBtn = document.getElementById('btn-close-admin-dashboard');
     const modal = document.getElementById('admin-dashboard-modal');
@@ -1019,6 +1060,10 @@ function initAdminDashboard() {
                     loadAdminDashboardRentals();
                 } else if (tabId === 'tab-fleet') {
                     loadAdminDashboardFleet();
+                } else if (tabId === 'tab-customers') {
+                    loadAdminDashboardCustomers();
+                } else if (tabId === 'tab-maintenance') {
+                    loadAdminMaintenanceTab();
                 }
             }
         });
@@ -1035,13 +1080,13 @@ function setupAdminForms() {
     const addVehBtn = document.getElementById('btn-admin-add-vehicle');
     const vehForm = document.getElementById('vehicle-form');
     
-    if (closeVeh) closeVeh.addEventListener('click', () => vehModal.classList.remove('show'));
+    if (closeVeh) closeVeh.addEventListener('click', () => closeAdminSubModal(vehModal));
     if (addVehBtn) {
         addVehBtn.addEventListener('click', () => {
             vehForm.reset();
             document.getElementById('admin-vehicle-id').value = '';
             document.getElementById('vehicle-modal-title').textContent = 'Cadastrar Veículo';
-            vehModal.classList.add('show');
+            openAdminSubModal(vehModal);
         });
     }
     
@@ -1082,7 +1127,7 @@ function setupAdminForms() {
                 
                 if (response.ok) {
                     alert('Veículo salvo com sucesso!');
-                    vehModal.classList.remove('show');
+                    closeAdminSubModal(vehModal);
                     loadAdminDashboardFleet();
                     loadVehicles(); // Atualiza frota principal
                     loadAdminDashboardData(); // Atualiza KPIs
@@ -1102,7 +1147,7 @@ function setupAdminForms() {
     const closeMaint = document.getElementById('btn-close-maintenance-modal');
     const maintForm = document.getElementById('maintenance-form');
     
-    if (closeMaint) closeMaint.addEventListener('click', () => maintModal.classList.remove('show'));
+    if (closeMaint) closeMaint.addEventListener('click', () => closeAdminSubModal(maintModal));
     
     if (maintForm) {
         maintForm.addEventListener('submit', async (e) => {
@@ -1127,7 +1172,7 @@ function setupAdminForms() {
                 
                 if (response.ok) {
                     alert('Manutenção registrada! Status do veículo atualizado.');
-                    maintModal.classList.remove('show');
+                    closeAdminSubModal(maintModal);
                     loadAdminDashboardFleet();
                     loadVehicles();
                     loadAdminDashboardData();
@@ -1146,7 +1191,7 @@ function setupAdminForms() {
     const closeRet = document.getElementById('btn-close-return-modal');
     const retForm = document.getElementById('return-form');
     
-    if (closeRet) closeRet.addEventListener('click', () => retModal.classList.remove('show'));
+    if (closeRet) closeRet.addEventListener('click', () => closeAdminSubModal(retModal));
     
     if (retForm) {
         retForm.addEventListener('submit', async (e) => {
@@ -1169,7 +1214,7 @@ function setupAdminForms() {
                 
                 if (response.ok) {
                     const data = await response.json();
-                    retModal.classList.remove('show');
+                    closeAdminSubModal(retModal);
                     
                     // Exibir Recibo Premium Fictício de Proteção
                     showReceipt(data);
@@ -1192,7 +1237,7 @@ function setupAdminForms() {
     const closeReceipt = document.getElementById('btn-close-receipt');
     const closeReceiptBtn = document.getElementById('btn-close-receipt-btn');
     
-    const hideReceipt = () => receiptModal.classList.remove('show');
+    const hideReceipt = () => closeAdminSubModal(receiptModal);
     if (closeReceipt) closeReceipt.addEventListener('click', hideReceipt);
     if (closeReceiptBtn) closeReceiptBtn.addEventListener('click', hideReceipt);
 }
@@ -1222,7 +1267,7 @@ function showReceipt(rental) {
     const total = subtotal + fines;
     document.getElementById('receipt-total').textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     
-    modal.classList.add('show');
+    openAdminSubModal(modal);
 }
 
 function openAdminDashboard() {
@@ -1253,33 +1298,49 @@ async function loadAdminDashboardData() {
             }
         });
         
-        if (response.ok) {
-            const metrics = await response.json();
-            
-            // Renderiza KPIs
-            document.getElementById('kpi-active-rentals').textContent = metrics.activeRentals;
-            document.getElementById('kpi-total-customers').textContent = metrics.totalCustomers;
-            document.getElementById('kpi-total-vehicles').textContent = `${metrics.availableVehicles + metrics.rentedVehicles + metrics.vehiclesInMaintenance} / ${metrics.totalVehicles}`;
-            
-            const revenue = metrics.currentMonthRevenue ? parseFloat(metrics.currentMonthRevenue).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'R$ 0,00';
-            document.getElementById('kpi-revenue').textContent = revenue;
-            
-            // Renderiza distribuição da frota
-            const total = metrics.totalVehicles || 1;
-            const pctAvailable = Math.round((metrics.availableVehicles / total) * 100);
-            const pctRented = Math.round((metrics.rentedVehicles / total) * 100);
-            const pctMaintenance = Math.round((metrics.vehiclesInMaintenance / total) * 100);
-            
-            document.getElementById('progress-available').style.width = `${pctAvailable}%`;
-            document.getElementById('progress-rented').style.width = `${pctRented}%`;
-            document.getElementById('progress-maintenance').style.width = `${pctMaintenance}%`;
-            
-            document.getElementById('count-available').textContent = metrics.availableVehicles;
-            document.getElementById('count-rented').textContent = metrics.rentedVehicles;
-            document.getElementById('count-maintenance').textContent = metrics.vehiclesInMaintenance;
+        if (!response.ok) {
+            throw new Error(`Erro na API: ${response.status}`);
         }
+        
+        const metrics = await response.json();
+        
+        // Renderiza KPIs
+        document.getElementById('kpi-active-rentals').textContent = metrics.activeRentals;
+        document.getElementById('kpi-total-customers').textContent = metrics.totalCustomers;
+        document.getElementById('kpi-total-vehicles').textContent = `${metrics.availableVehicles + metrics.rentedVehicles + metrics.vehiclesInMaintenance} / ${metrics.totalVehicles}`;
+        
+        const revenue = metrics.currentMonthRevenue ? parseFloat(metrics.currentMonthRevenue).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'R$ 0,00';
+        document.getElementById('kpi-revenue').textContent = revenue;
+        
+        // Renderiza distribuição da frota
+        const total = metrics.totalVehicles || 1;
+        const pctAvailable = Math.round((metrics.availableVehicles / total) * 100);
+        const pctRented = Math.round((metrics.rentedVehicles / total) * 100);
+        const pctMaintenance = Math.round((metrics.vehiclesInMaintenance / total) * 100);
+        
+        document.getElementById('progress-available').style.width = `${pctAvailable}%`;
+        document.getElementById('progress-rented').style.width = `${pctRented}%`;
+        document.getElementById('progress-maintenance').style.width = `${pctMaintenance}%`;
+        
+        document.getElementById('count-available').textContent = metrics.availableVehicles;
+        document.getElementById('count-rented').textContent = metrics.rentedVehicles;
+        document.getElementById('count-maintenance').textContent = metrics.vehiclesInMaintenance;
     } catch(e) {
-        console.error('Erro ao carregar métricas do dashboard:', e);
+        console.warn('Usando fallback local para métricas de portfólio:', e);
+        // Fallback dinâmico resiliente com dados fictícios elegantes e realistas
+        document.getElementById('kpi-active-rentals').textContent = "3";
+        document.getElementById('kpi-total-customers').textContent = "9";
+        document.getElementById('kpi-total-vehicles').textContent = "9 / 12";
+        document.getElementById('kpi-revenue').textContent = "R$ 2.940,00";
+        
+        // Distribuição visual fictícia harmônica
+        document.getElementById('progress-available').style.width = "75%";
+        document.getElementById('progress-rented').style.width = "17%";
+        document.getElementById('progress-maintenance').style.width = "8%";
+        
+        document.getElementById('count-available').textContent = "9";
+        document.getElementById('count-rented').textContent = "2";
+        document.getElementById('count-maintenance').textContent = "1";
     }
     
     // 2. Inicializa as duas tabelas principais da primeira aba
@@ -1310,11 +1371,12 @@ async function loadAdminDashboardFleet() {
                 
                 const tdStatus = document.createElement('td');
                 const statusBadge = document.createElement('span');
-                statusBadge.className = 'badge';
+                statusBadge.className = 'badge-inline';
                 
                 if (v.status === 'AVAILABLE') {
                     statusBadge.className += ' badge-primary';
                     statusBadge.style.backgroundColor = 'var(--success)';
+                    statusBadge.style.color = 'white';
                     statusBadge.textContent = 'Disponível';
                 } else if (v.status === 'RENTED') {
                     statusBadge.className += ' badge-primary';
@@ -1349,17 +1411,17 @@ async function loadAdminDashboardFleet() {
                     document.getElementById('admin-veh-seats').value = v.seats;
                     document.getElementById('admin-veh-rate').value = v.dailyRate;
                     document.getElementById('vehicle-modal-title').textContent = 'Editar Veículo';
-                    document.getElementById('vehicle-form-modal').classList.add('show');
+                    openAdminSubModal(document.getElementById('vehicle-form-modal'));
                 });
                 
                 const btnMaint = document.createElement('button');
                 btnMaint.className = 'btn-admin-action btn-maint';
-                btnMaint.innerHTML = '<i data-lucide="tool" style="width: 12px; height: 12px; vertical-align: middle;"></i> 🔧';
+                btnMaint.innerHTML = '<i data-lucide="wrench" style="width: 12px; height: 12px; vertical-align: middle;"></i> 🔧';
                 btnMaint.title = 'Registrar Manutenção';
                 btnMaint.addEventListener('click', () => {
                     document.getElementById('maintenance-vehicle-id').value = v.id;
                     document.getElementById('maint-notes').value = '';
-                    document.getElementById('maintenance-form-modal').classList.add('show');
+                    openAdminSubModal(document.getElementById('maintenance-form-modal'));
                 });
                 
                 btnGroup.appendChild(btnEdit);
@@ -1393,75 +1455,106 @@ async function loadAdminDashboardRentals() {
             }
         });
         
-        if (response.ok) {
-            const rentals = await response.json();
-            const tbody = document.querySelector('#admin-rentals-table tbody');
-            tbody.innerHTML = '';
-            
-            if (rentals && rentals.length > 0) {
-                rentals.forEach(r => {
-                    const tr = document.createElement('tr');
-                    
-                    const tdClient = document.createElement('td');
-                    tdClient.style.fontWeight = '600';
-                    tdClient.textContent = r.user ? abbreviateName(r.user.fullName) : 'Cliente Fictício';
-                    
-                    const tdVehicle = document.createElement('td');
-                    tdVehicle.textContent = r.vehicle ? `${r.vehicle.brand} ${r.vehicle.model}` : 'Veículo';
-                    
-                    const tdPickup = document.createElement('td');
-                    tdPickup.textContent = new Date(r.pickupDate).toLocaleString('pt-BR');
-                    
-                    const tdReturn = document.createElement('td');
-                    tdReturn.textContent = new Date(r.returnDate).toLocaleString('pt-BR');
-                    
-                    const tdStatus = document.createElement('td');
-                    const statusBadge = document.createElement('span');
-                    statusBadge.className = 'badge';
-                    
-                    if (r.status === 'ACTIVE') {
-                        statusBadge.className += ' badge-primary';
-                        statusBadge.textContent = 'Ativo';
-                    } else if (r.status === 'COMPLETED') {
-                        statusBadge.className += ' badge-primary';
-                        statusBadge.style.backgroundColor = 'var(--success)';
-                        statusBadge.textContent = 'Concluído';
-                    } else {
-                        statusBadge.className += ' badge-primary';
-                        statusBadge.style.backgroundColor = 'var(--text-light)';
-                        statusBadge.textContent = 'Cancelado';
-                    }
-                    tdStatus.appendChild(statusBadge);
-                    
-                    const tdActions = document.createElement('td');
-                    if (r.status === 'ACTIVE') {
-                        const btnReturn = document.createElement('button');
-                        btnReturn.className = 'btn-admin-action';
-                        btnReturn.innerHTML = 'Devolver';
-                        btnReturn.addEventListener('click', () => {
-                            openReturnModal(r);
-                        });
-                        tdActions.appendChild(btnReturn);
-                    } else {
-                        tdActions.textContent = 'Sem Ações';
-                        tdActions.style.color = 'var(--text-light)';
-                    }
-                    
-                    tr.appendChild(tdClient);
-                    tr.appendChild(tdVehicle);
-                    tr.appendChild(tdPickup);
-                    tr.appendChild(tdReturn);
-                    tr.appendChild(tdStatus);
-                    tr.appendChild(tdActions);
-                    
-                    tbody.appendChild(tr);
-                });
-            } else {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-light);">Nenhum aluguel registrado.</td></tr>';
-            }
+        if (!response.ok) {
+            throw new Error(`Erro na API: ${response.status}`);
+        }
+        
+        const rentals = await response.json();
+        const tbody = document.querySelector('#admin-rentals-table tbody');
+        tbody.innerHTML = '';
+        
+        if (rentals && rentals.length > 0) {
+            rentals.forEach(r => {
+                const tr = document.createElement('tr');
+                
+                const tdClient = document.createElement('td');
+                tdClient.style.fontWeight = '600';
+                tdClient.textContent = r.user ? abbreviateName(r.user.fullName) : 'Cliente Fictício';
+                
+                const tdVehicle = document.createElement('td');
+                tdVehicle.textContent = r.vehicle ? `${r.vehicle.brand} ${r.vehicle.model}` : 'Veículo';
+                
+                const tdPickup = document.createElement('td');
+                tdPickup.textContent = new Date(r.pickupDate).toLocaleString('pt-BR');
+                
+                const tdReturn = document.createElement('td');
+                tdReturn.textContent = new Date(r.returnDate).toLocaleString('pt-BR');
+                
+                const tdStatus = document.createElement('td');
+                const statusBadge = document.createElement('span');
+                statusBadge.className = 'badge';
+                
+                if (r.status === 'ACTIVE') {
+                    statusBadge.className += ' badge-primary';
+                    statusBadge.textContent = 'Ativo';
+                } else if (r.status === 'COMPLETED') {
+                    statusBadge.className += ' badge-primary';
+                    statusBadge.style.backgroundColor = 'var(--success)';
+                    statusBadge.textContent = 'Concluído';
+                } else {
+                    statusBadge.className += ' badge-primary';
+                    statusBadge.style.backgroundColor = 'var(--text-light)';
+                    statusBadge.textContent = 'Cancelado';
+                }
+                tdStatus.appendChild(statusBadge);
+                
+                const tdActions = document.createElement('td');
+                if (r.status === 'ACTIVE') {
+                    const btnReturn = document.createElement('button');
+                    btnReturn.className = 'btn-admin-action';
+                    btnReturn.innerHTML = 'Devolver';
+                    btnReturn.addEventListener('click', () => {
+                        openReturnModal(r);
+                    });
+                    tdActions.appendChild(btnReturn);
+                } else {
+                    tdActions.textContent = 'Sem Ações';
+                    tdActions.style.color = 'var(--text-light)';
+                }
+                
+                tr.appendChild(tdClient);
+                tr.appendChild(tdVehicle);
+                tr.appendChild(tdPickup);
+                tr.appendChild(tdReturn);
+                tr.appendChild(tdStatus);
+                tr.appendChild(tdActions);
+                
+                tbody.appendChild(tr);
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-light);">Nenhum aluguel registrado.</td></tr>';
         }
     } catch(e) {
-        console.error('Erro ao carregar aluguéis no dashboard:', e);
+        console.warn('Usando aluguéis fictícios de fallback para portfólio:', e);
+        const tbody = document.querySelector('#admin-rentals-table tbody');
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td style="font-weight: 600;">João S.</td>
+                    <td>Chevrolet Onix</td>
+                    <td>01/06/2026 09:00</td>
+                    <td>06/06/2026 18:00</td>
+                    <td><span class="badge-inline badge-primary">Ativo</span></td>
+                    <td><div class="admin-action-btn-group"><button class="btn-admin-action" onclick="alert('Ambiente Fictício: Ação não disponível no modo de fallback offline.')">Devolver</button></div></td>
+                </tr>
+                <tr>
+                    <td style="font-weight: 600;">Maria S.</td>
+                    <td>Toyota Corolla</td>
+                    <td>02/06/2026 10:00</td>
+                    <td>07/06/2026 10:00</td>
+                    <td><span class="badge-inline badge-primary">Ativo</span></td>
+                    <td><div class="admin-action-btn-group"><button class="btn-admin-action" onclick="alert('Ambiente Fictício: Ação não disponível no modo de fallback offline.')">Devolver</button></div></td>
+                </tr>
+                <tr>
+                    <td style="font-weight: 600;">Pedro S.</td>
+                    <td>Jeep Compass</td>
+                    <td>20/05/2026 14:00</td>
+                    <td>25/05/2026 14:00</td>
+                    <td><span class="badge-inline badge-primary" style="background-color: var(--success); color: white;">Concluído</span></td>
+                    <td><span style="color: var(--text-light); font-size: 0.8rem;">Sem Ações</span></td>
+                </tr>
+            `;
+        }
     }
 }
 
@@ -1484,7 +1577,7 @@ function openReturnModal(rental) {
         });
     }
     
-    modal.classList.add('show');
+    openAdminSubModal(modal);
 }
 
 function loadAdminDashboardCustomers() {
@@ -1494,31 +1587,216 @@ function loadAdminDashboardCustomers() {
             <td style="font-weight: 600;">Thiago G. S.</td>
             <td>***.248.109-**</td>
             <td>***.***.209</td>
-            <td><span class="badge badge-primary" style="background-color: var(--primary); font-weight: 700;">DIAMANTE</span></td>
+            <td><span class="badge-inline badge-primary" style="background-color: var(--primary); font-weight: 700;">DIAMANTE</span></td>
             <td style="font-weight: 700; color: var(--primary);">2.400 pts</td>
         </tr>
         <tr>
             <td style="font-weight: 600;">Maria C. F.</td>
             <td>***.382.901-**</td>
             <td>***.***.612</td>
-            <td><span class="badge badge-primary" style="background-color: var(--warning); font-weight: 700;">OURO</span></td>
+            <td><span class="badge-inline badge-primary" style="background-color: var(--warning); font-weight: 700;">OURO</span></td>
             <td style="font-weight: 700; color: var(--warning);">1.200 pts</td>
         </tr>
         <tr>
             <td style="font-weight: 600;">Bruno A. R.</td>
             <td>***.892.112-**</td>
             <td>***.***.293</td>
-            <td><span class="badge badge-primary" style="background-color: #3b82f6; font-weight: 700;">PRATA</span></td>
+            <td><span class="badge-inline badge-primary" style="background-color: #3b82f6; font-weight: 700;">PRATA</span></td>
             <td style="font-weight: 700; color: #3b82f6;">600 pts</td>
         </tr>
         <tr>
             <td style="font-weight: 600;">Ana J. O.</td>
             <td>***.501.374-**</td>
             <td>***.***.281</td>
-            <td><span class="badge badge-primary" style="background-color: var(--text-light); font-weight: 700;">BRONZE</span></td>
+            <td><span class="badge-inline badge-primary" style="background-color: var(--text-light); font-weight: 700;">BRONZE</span></td>
             <td style="font-weight: 700; color: var(--text-light);">100 pts</td>
         </tr>
     `;
+}
+
+/**
+ * Popula a aba de Veículos em Manutenção com dados fictícios premium.
+ * Exibe KPIs, cards visuais por tipo de manutenção e tabela de detalhamento.
+ */
+function loadAdminMaintenanceTab() {
+    // Dados fictícios de manutenção (portfólio)
+    const maintenanceData = [
+        {
+            id: 'M-0041',
+            brand: 'Volkswagen', model: 'Tiguan',
+            plate: 'BRZ-3E21', category: 'SUV',
+            type: 'corrective', typeLabel: 'Corretiva',
+            shop: 'Auto Center São Luís',
+            entryDate: '26/05/2026',
+            exitForecast: '05/06/2026',
+            daysIn: 7, totalDays: 10,
+            cost: 'R$ 2.400,00',
+            urgency: 'high', urgencyLabel: 'Urgente',
+            description: 'Falha no sistema de freios ABS e troca de pastilhas'
+        },
+        {
+            id: 'M-0042',
+            brand: 'Honda', model: 'HR-V',
+            plate: 'QKR-7F08', category: 'SUV',
+            type: 'preventive', typeLabel: 'Preventiva',
+            shop: 'Oficina Mega Motors',
+            entryDate: '29/05/2026',
+            exitForecast: '04/06/2026',
+            daysIn: 4, totalDays: 6,
+            cost: 'R$ 980,00',
+            urgency: 'low', urgencyLabel: 'Baixa',
+            description: 'Revisão geral dos 60.000 km + alinhamento'
+        },
+        {
+            id: 'M-0043',
+            brand: 'Toyota', model: 'Corolla',
+            plate: 'MNP-4A55', category: 'Sedan',
+            type: 'tires', typeLabel: 'Pneus',
+            shop: 'Borracharia Confiamaç',
+            entryDate: '01/06/2026',
+            exitForecast: '03/06/2026',
+            daysIn: 1, totalDays: 2,
+            cost: 'R$ 1.620,00',
+            urgency: 'medium', urgencyLabel: 'Média',
+            description: 'Troca de 4 pneus + balanceamento e rodizímio'
+        },
+        {
+            id: 'M-0044',
+            brand: 'Jeep', model: 'Compass',
+            plate: 'GTX-2C90', category: 'SUV',
+            type: 'oil', typeLabel: 'Troca de Óleo',
+            shop: 'Auto Center São Luís',
+            entryDate: '02/06/2026',
+            exitForecast: '02/06/2026',
+            daysIn: 0, totalDays: 1,
+            cost: 'R$ 340,00',
+            urgency: 'low', urgencyLabel: 'Baixa',
+            description: 'Troca de óleo 5W-30 sintético + filtros'
+        },
+        {
+            id: 'M-0045',
+            brand: 'Chevrolet', model: 'Tracker',
+            plate: 'VWQ-9K14', category: 'SUV',
+            type: 'corrective', typeLabel: 'Corretiva',
+            shop: 'Concessão AutoMax',
+            entryDate: '25/05/2026',
+            exitForecast: '08/06/2026',
+            daysIn: 8, totalDays: 14,
+            cost: 'R$ 2.460,00',
+            urgency: 'high', urgencyLabel: 'Urgente',
+            description: 'Substituição da caixa de câmbio automática'
+        }
+    ];
+
+    // -- Popula Cards --
+    const grid = document.getElementById('maint-cards-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    maintenanceData.forEach(m => {
+        const progress = m.totalDays > 0 ? Math.round((m.daysIn / m.totalDays) * 100) : 100;
+        const card = document.createElement('div');
+        card.className = `maint-card type-${m.type}`;
+        card.innerHTML = `
+            <div class="maint-card-header">
+                <div class="maint-car-info">
+                    <h4>${m.brand} ${m.model}</h4>
+                    <p>${m.plate} • ${m.category}</p>
+                </div>
+                <span class="maint-type-badge">${m.typeLabel}</span>
+            </div>
+            <div class="maint-card-body">
+                <div class="maint-info-row">
+                    <i data-lucide="building-2"></i>
+                    <span><strong>Oficina:</strong> ${m.shop}</span>
+                </div>
+                <div class="maint-info-row">
+                    <i data-lucide="clipboard-list"></i>
+                    <span>${m.description}</span>
+                </div>
+                <div class="maint-info-row">
+                    <i data-lucide="calendar"></i>
+                    <span><strong>Entrada:</strong> ${m.entryDate} &nbsp;→&nbsp; <strong>Saída:</strong> ${m.exitForecast}</span>
+                </div>
+            </div>
+            <div class="maint-progress-wrapper">
+                <div class="maint-progress-label">
+                    <span>Progresso estimado</span>
+                    <span><strong>${progress}%</strong> (${m.daysIn}/${m.totalDays} dias)</span>
+                </div>
+                <div class="maint-progress-bar-track">
+                    <div class="maint-progress-bar-fill" style="width: 0%" data-target="${progress}"></div>
+                </div>
+            </div>
+            <div class="maint-card-footer">
+                <span class="maint-cost">${m.cost}</span>
+                <span class="maint-urgency urgency-${m.urgency}">${m.urgencyLabel}</span>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+
+    // Anima barras de progresso após render
+    lucide.createIcons();
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            grid.querySelectorAll('.maint-progress-bar-fill[data-target]').forEach(bar => {
+                bar.style.width = bar.getAttribute('data-target') + '%';
+            });
+        }, 80);
+    });
+
+    // -- Popula Tabela de Detalhamento --
+    const tbody = document.getElementById('maint-table-body');
+    if (tbody) {
+        tbody.innerHTML = '';
+        maintenanceData.forEach(m => {
+            const progress = m.totalDays > 0 ? Math.round((m.daysIn / m.totalDays) * 100) : 100;
+            const tr = document.createElement('tr');
+            const typeColors = {
+                corrective: 'color:#DC2626; background:#FEE2E2',
+                preventive: 'color:#2563EB; background:#EFF6FF',
+                tires:      'color:#7C3AED; background:#F3E8FF',
+                oil:        'color:#D97706; background:#FEF3C7'
+            };
+            const typeStyle = typeColors[m.type] || '';
+            tr.innerHTML = `
+                <td>
+                    <div style="font-weight: 600; color: var(--secondary);">${m.brand} ${m.model}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-light);">${m.plate}</div>
+                </td>
+                <td><span class="badge-inline" style="${typeStyle}; font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.55rem; border-radius: 999px;">${m.typeLabel}</span></td>
+                <td style="font-size: 0.85rem;">${m.shop}</td>
+                <td style="font-size: 0.85rem; white-space: nowrap;">${m.entryDate}</td>
+                <td style="font-size: 0.85rem; white-space: nowrap; font-weight: 600;">${m.exitForecast}</td>
+                <td style="font-weight: 700; color: var(--secondary);">${m.cost}</td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <div class="table-progress-track">
+                            <div class="table-progress-fill" style="width: 0%" data-target="${progress}"></div>
+                        </div>
+                        <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-light); white-space: nowrap;">${progress}%</span>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Anima barras da tabela
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                tbody.querySelectorAll('.table-progress-fill[data-target]').forEach(bar => {
+                    bar.style.width = bar.getAttribute('data-target') + '%';
+                });
+            }, 120);
+        });
+    }
+
+    // Atualiza timestamp
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const el = document.getElementById('maint-last-update');
+    if (el) el.textContent = `Atualizado às ${timeStr}`;
 }
 
 // Dicionário de Traduções para Avisos de Portfólio Fictício
@@ -1566,4 +1844,337 @@ function updateLanguageTexts() {
     if (receiptWarning) {
         receiptWarning.innerHTML = t.receiptWarning;
     }
+}
+
+/**
+ * ==========================================================================
+ * Client Profile & User Management Module
+ * ==========================================================================
+ */
+
+function initClientProfile() {
+    const profileModal = document.getElementById('client-profile-modal');
+    const closeBtn = document.getElementById('btn-close-profile-modal');
+    
+    if (closeBtn && profileModal) {
+        closeBtn.addEventListener('click', () => {
+            profileModal.classList.remove('show');
+        });
+        
+        profileModal.addEventListener('click', (e) => {
+            if (e.target === profileModal) {
+                profileModal.classList.remove('show');
+            }
+        });
+    }
+    
+    // Configuração do formulário de senha
+    const passForm = document.getElementById('profile-password-form');
+    if (passForm) {
+        passForm.addEventListener('submit', handlePasswordChange);
+    }
+    
+    // Configuração do upload de avatar
+    const avatarInput = document.getElementById('profile-avatar-input');
+    if (avatarInput) {
+        avatarInput.addEventListener('change', handleAvatarUpload);
+    }
+    
+    // Setup das abas do perfil
+    setupProfileTabs();
+}
+
+function setupProfileTabs() {
+    const tabButtons = document.querySelectorAll('.profile-tab-btn');
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabButtons.forEach(b => {
+                b.classList.remove('active');
+                b.style.borderBottomColor = 'transparent';
+                b.style.fontWeight = '500';
+                b.style.color = 'var(--text-light)';
+            });
+            
+            btn.classList.add('active');
+            btn.style.borderBottomColor = 'var(--primary)';
+            btn.style.fontWeight = '600';
+            btn.style.color = 'var(--secondary)';
+            
+            const tabId = btn.getAttribute('data-tab');
+            document.querySelectorAll('.profile-tab-pane').forEach(pane => {
+                pane.style.display = 'none';
+            });
+            
+            const activePane = document.getElementById(tabId);
+            if (activePane) {
+                activePane.style.display = 'block';
+            }
+            
+            // Ações específicas de carregamento por aba
+            if (tabId === 'tab-profile-rentals') {
+                loadClientRentals();
+            }
+        });
+    });
+}
+
+async function openClientProfile() {
+    const token = localStorage.getItem('jwt_token');
+    if (!token) return;
+    
+    const profileModal = document.getElementById('client-profile-modal');
+    if (!profileModal) return;
+    
+    // Reset para primeira aba (Meu Perfil)
+    const firstTabBtn = document.querySelector('.profile-tab-btn[data-tab="tab-profile-info"]');
+    if (firstTabBtn) firstTabBtn.click();
+    
+    profileModal.classList.add('show');
+    
+    // Carregar dados cadastrais
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/me`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) throw new Error('Erro ao carregar dados do perfil');
+        
+        const data = await response.json();
+        
+        // Povoar campos no HTML
+        const nameDiv = document.getElementById('profile-name');
+        const emailDiv = document.getElementById('profile-email');
+        const phoneDiv = document.getElementById('profile-phone');
+        const cpfDiv = document.getElementById('profile-cpf');
+        const cnhDiv = document.getElementById('profile-cnh');
+        const fidelityPointsDiv = document.getElementById('profile-fidelity-points');
+        const fidelityLevelDiv = document.getElementById('profile-fidelity-level');
+        const avatarImg = document.getElementById('profile-avatar-img');
+        
+        if (nameDiv) nameDiv.textContent = data.fullName;
+        if (emailDiv) emailDiv.textContent = data.email;
+        if (phoneDiv) phoneDiv.textContent = data.phone || 'Não informado';
+        if (cpfDiv) cpfDiv.textContent = maskCpf(data.cpf);
+        if (cnhDiv) cnhDiv.textContent = maskCnh(data.cnh);
+        if (fidelityPointsDiv) fidelityPointsDiv.textContent = `${data.fidelityPoints} pts`;
+        if (fidelityLevelDiv) {
+            fidelityLevelDiv.textContent = data.fidelityLevel;
+            // Cor especial baseada na fidelidade
+            if (data.fidelityLevel === 'GOLD') fidelityLevelDiv.style.color = '#D97706';
+            else if (data.fidelityLevel === 'DIAMOND') fidelityLevelDiv.style.color = '#7C3AED';
+            else if (data.fidelityLevel === 'SILVER') fidelityLevelDiv.style.color = '#4B5563';
+            else fidelityLevelDiv.style.color = 'var(--secondary)';
+        }
+        
+        if (avatarImg) {
+            if (data.avatar && data.avatar.startsWith('data:image')) {
+                avatarImg.src = data.avatar;
+            } else {
+                avatarImg.src = 'img/compact.png'; // Fallback
+            }
+        }
+        
+        lucide.createIcons();
+    } catch (e) {
+        console.error(e);
+        alert('Falha ao obter perfil do usuário.');
+    }
+}
+
+async function loadClientRentals() {
+    const token = localStorage.getItem('jwt_token');
+    if (!token) return;
+    
+    const loader = document.getElementById('profile-rentals-loader');
+    const emptyDiv = document.getElementById('profile-rentals-empty');
+    const container = document.getElementById('profile-rentals-container');
+    const tbody = document.getElementById('profile-rentals-tbody');
+    
+    if (loader) loader.style.display = 'flex';
+    if (emptyDiv) emptyDiv.style.display = 'none';
+    if (container) container.style.display = 'none';
+    if (tbody) tbody.innerHTML = '';
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/rentals/me`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) throw new Error('Falha ao carregar histórico de aluguéis');
+        
+        const rentals = await response.json();
+        
+        if (loader) loader.style.display = 'none';
+        
+        if (!rentals || rentals.length === 0) {
+            if (emptyDiv) emptyDiv.style.display = 'block';
+            return;
+        }
+        
+        rentals.forEach(rental => {
+            const tr = document.createElement('tr');
+            
+            // Formatando datas
+            const pickup = new Date(rental.pickupDate).toLocaleDateString('pt-BR');
+            const returnD = new Date(rental.returnDate).toLocaleDateString('pt-BR');
+            
+            // Mapeando badge de status
+            let statusText = 'Pendente';
+            let statusClass = 'pending';
+            if (rental.status === 'ACTIVE' || rental.status === 'CONFIRMED') {
+                statusText = 'Ativo';
+                statusClass = 'active';
+            } else if (rental.status === 'COMPLETED') {
+                statusText = 'Concluído';
+                statusClass = 'completed';
+            }
+            
+            tr.innerHTML = `
+                <td style="padding: 0.75rem;"><strong>${rental.vehicleBrand} ${rental.vehicleModel}</strong><br><span style="font-size: 0.75rem; color: var(--text-light); font-weight: 550;">${rental.vehicleCategory}</span></td>
+                <td style="padding: 0.75rem;">Retirada: ${pickup}<br>Devolução: ${returnD}</td>
+                <td style="padding: 0.75rem; font-weight: 700; color: var(--secondary);">R$ ${rental.totalCost.toFixed(2)}</td>
+                <td style="padding: 0.75rem;"><span class="status-badge ${statusClass}">${statusText}</span></td>
+            `;
+            
+            tbody.appendChild(tr);
+        });
+        
+        if (container) container.style.display = 'block';
+        
+    } catch (e) {
+        console.error(e);
+        if (loader) loader.style.display = 'none';
+        if (tbody) tbody.innerHTML = `<tr><td colspan="4" class="error-msg" style="text-align: center; padding: 1.5rem 0;">Erro ao conectar com o servidor.</td></tr>`;
+        if (container) container.style.display = 'block';
+    }
+}
+
+async function handlePasswordChange(e) {
+    e.preventDefault();
+    const token = localStorage.getItem('jwt_token');
+    if (!token) return;
+    
+    const oldPassword = document.getElementById('profile-password-old').value;
+    const newPassword = document.getElementById('profile-password-new').value;
+    const confirmPassword = document.getElementById('profile-password-confirm').value;
+    
+    const errorDiv = document.getElementById('profile-password-error');
+    const successDiv = document.getElementById('profile-password-success');
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    
+    if (errorDiv) errorDiv.style.display = 'none';
+    if (successDiv) successDiv.style.display = 'none';
+    
+    if (newPassword !== confirmPassword) {
+        if (errorDiv) {
+            errorDiv.textContent = 'As novas senhas não coincidem!';
+            errorDiv.style.display = 'block';
+        }
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        if (errorDiv) {
+            errorDiv.textContent = 'A nova senha deve possuir no mínimo 6 caracteres!';
+            errorDiv.style.display = 'block';
+        }
+        return;
+    }
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Processando...';
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/me/password`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ oldPassword, newPassword })
+        });
+        
+        const resText = await response.text();
+        
+        if (!response.ok) {
+            throw new Error(resText || 'Falha ao atualizar senha. Verifique se a senha atual está correta.');
+        }
+        
+        if (successDiv) {
+            successDiv.textContent = 'Sua senha foi alterada com sucesso!';
+            successDiv.style.display = 'block';
+        }
+        e.target.reset();
+        
+    } catch (err) {
+        console.error(err);
+        if (errorDiv) {
+            errorDiv.textContent = err.message || 'Ocorreu um erro ao atualizar a senha.';
+            errorDiv.style.display = 'block';
+        }
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Alterar Senha';
+    }
+}
+
+async function handleAvatarUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const token = localStorage.getItem('jwt_token');
+    if (!token) return;
+    
+    // Validação de tamanho local do browser (max 500KB)
+    if (file.size > 512000) {
+        alert('Erro: A foto excede o tamanho máximo de 500KB.');
+        return;
+    }
+    
+    const avatarImg = document.getElementById('profile-avatar-img');
+    const originalSrc = avatarImg ? avatarImg.src : '';
+    
+    // Loader temporário no avatar
+    if (avatarImg) avatarImg.style.opacity = '0.5';
+    
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+        const base64String = reader.result;
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/users/me/avatar`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ avatar: base64String })
+            });
+            
+            if (!response.ok) throw new Error('Erro ao atualizar foto de perfil no servidor');
+            
+            // Sucesso! Atualiza visualmente na hora
+            if (avatarImg) {
+                avatarImg.src = base64String;
+                avatarImg.style.opacity = '1';
+            }
+            alert('Foto de perfil atualizada com sucesso!');
+        } catch (error) {
+            console.error(error);
+            alert('Erro de conexão ou tamanho ao enviar foto de perfil.');
+            if (avatarImg) {
+                avatarImg.src = originalSrc;
+                avatarImg.style.opacity = '1';
+            }
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+// Helpers extras para CPF
+function maskCpf(cpf) {
+    if (!cpf) return '';
+    const clean = cpf.replace(/\D/g, '');
+    if (clean.length !== 11) return cpf;
+    return `***.***.${clean.substring(6, 9)}-**`;
 }

@@ -552,7 +552,6 @@
     <!-- Admin Dashboard Modal (Full Screen) -->
     <div id="admin-dashboard-modal" class="info-modal-overlay admin-dashboard-overlay">
         <div class="admin-dashboard-container glass-panel">
-            <button class="info-modal-close admin-dashboard-close" id="btn-close-admin-dashboard">&times;</button>
             
             <aside class="admin-sidebar">
                 <div class="admin-logo-wrapper">
@@ -572,10 +571,18 @@
                     <a href="#" class="admin-nav-item" data-tab="tab-customers">
                         <i data-lucide="users"></i> Clientes
                     </a>
+                    <a href="#" class="admin-nav-item" data-tab="tab-maintenance">
+                        <i data-lucide="wrench"></i> Manutenção
+                    </a>
                 </nav>
             </aside>
             
-            <main class="admin-main-content">
+            <div class="admin-main-wrapper">
+                <!-- Header fixo da área de conteúdo com o botão fechar -->
+                <div class="admin-main-header">
+                    <button class="info-modal-close admin-dashboard-close" id="btn-close-admin-dashboard">&times;</button>
+                </div>
+                <main class="admin-main-content">
                 <!-- Overview Tab -->
                 <div id="tab-overview" class="admin-tab-content active">
                     <h2 class="admin-page-title">Visão Geral do Sistema</h2>
@@ -717,13 +724,101 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
+                </div><!-- /tab-customers -->
+
+                <!-- Maintenance Tab -->
+                <div id="tab-maintenance" class="admin-tab-content">
+                    <!-- Page Header -->
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
+                        <div>
+                            <h2 class="admin-page-title" style="margin-bottom: 0.25rem; border-bottom: none; padding-bottom: 0;">Veículos em Manutenção</h2>
+                            <p style="color: var(--text-light); font-size: 0.9rem; margin: 0;">Acompanhamento em tempo real do status da frota em reparo</p>
+                        </div>
+                        <span class="maint-last-update" id="maint-last-update" style="font-size: 0.78rem; color: var(--text-light); background: var(--bg-light); padding: 0.35rem 0.8rem; border-radius: var(--radius-full); border: 1px solid var(--border-color); white-space: nowrap; margin-top: 0.3rem;">Atualizado agora</span>
+                    </div>
+
+                    <!-- KPI Summary Cards -->
+                    <div class="admin-kpi-grid" style="margin-bottom: 2rem;">
+                        <div class="kpi-card">
+                            <div class="kpi-icon-wrapper" style="background-color: #FEE2E2; color: var(--danger);">
+                                <i data-lucide="wrench"></i>
+                            </div>
+                            <div class="kpi-info">
+                                <span class="kpi-title">Em Manutenção</span>
+                                <h3 class="kpi-value" id="maint-kpi-total" style="color: var(--danger);">4</h3>
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon-wrapper" style="background-color: #FEF3C7; color: var(--warning);">
+                                <i data-lucide="clock"></i>
+                            </div>
+                            <div class="kpi-info">
+                                <span class="kpi-title">Dias Médios Parado</span>
+                                <h3 class="kpi-value" id="maint-kpi-avg-days" style="color: var(--warning);">6</h3>
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon-wrapper" style="background-color: #ECFDF5; color: var(--success);">
+                                <i data-lucide="dollar-sign"></i>
+                            </div>
+                            <div class="kpi-info">
+                                <span class="kpi-title">Custo Total Estimado</span>
+                                <h3 class="kpi-value" id="maint-kpi-cost" style="color: var(--success);">R$ 7.800</h3>
+                            </div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-icon-wrapper" style="background-color: #EFF6FF; color: #3B82F6;">
+                                <i data-lucide="calendar-check"></i>
+                            </div>
+                            <div class="kpi-info">
+                                <span class="kpi-title">Previsão de Retorno</span>
+                                <h3 class="kpi-value" id="maint-kpi-return" style="color: #3B82F6; font-size: 1.1rem;">Próx. 3 dias</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Maintenance Cards Grid -->
+                    <div class="maint-cards-grid" id="maint-cards-grid"></div>
+
+                    <!-- Detail Table -->
+                    <div style="margin-top: 2rem;">
+                        <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--secondary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i data-lucide="list" style="width: 18px; height: 18px;"></i>
+                            Detalhamento por Oficina
+                        </h3>
+                        <div class="admin-table-container">
+                            <table class="admin-table" id="maint-detail-table">
+                                <thead>
+                                    <tr>
+                                        <th>Veículo</th>
+                                        <th>Tipo de Manutenção</th>
+                                        <th>Oficina</th>
+                                        <th>Entrada</th>
+                                        <th>Previsão Saída</th>
+                                        <th>Custo Est.</th>
+                                        <th>Progresso</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="maint-table-body">
+                                    <!-- Populado via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Portfolio Disclaimer -->
+                    <div style="margin-top: 1.5rem; padding: 0.75rem 1rem; background: var(--bg-light); border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 0.78rem; color: var(--text-light); display: flex; align-items: center; gap: 0.5rem;">
+                        <i data-lucide="info" style="width: 14px; height: 14px; flex-shrink: 0; color: var(--primary);"></i>
+                        <span>Dados fictícios para portfólio: todos os veículos, oficinas, custos e datas são simulados. Nenhuma operação real é executada.</span>
+                    </div>
+                </div><!-- /tab-maintenance -->
             </main>
 
-            <!-- Persistent Portfolio Warning Banner inside Admin Panel -->
-            <div class="admin-portfolio-banner" style="position: absolute; bottom: 0; left: 0; width: 100%; background: var(--bg-light); border-top: 1px solid var(--border-color); padding: 0.4rem 1.5rem; font-size: 0.72rem; color: var(--text-light); text-align: center; font-weight: 600; letter-spacing: 0.05em; z-index: 5;">
-                ⚠️ AMBIENTE DE PORTFÓLIO: Todos os dados cadastrados, aluguéis e devoluções são 100% FICTÍCIOS. Nomes e CNHs mascarados com segurança.
-            </div>
+                <!-- Persistent Portfolio Warning Banner inside Admin Panel -->
+                <div class="admin-portfolio-banner" style="background: var(--bg-light); border-top: 1px solid var(--border-color); padding: 0.4rem 1.5rem; font-size: 0.72rem; color: var(--text-light); text-align: center; font-weight: 600; letter-spacing: 0.05em;">
+                    ⚠️ AMBIENTE DE PORTFÓLIO: Todos os dados cadastrados, aluguéis e devoluções são 100% FICTÍCIOS. Nomes e CNHs mascarados com segurança.
+                </div>
+            </div><!-- /admin-main-wrapper -->
         </div>
     </div>
 
@@ -862,6 +957,132 @@
             
             <p style="font-size: 0.78rem; color: var(--text-light); line-height: 1.4; margin-bottom: 1.2rem;">⚠️ <strong>ATENÇÃO:</strong> Esta transação foi efetuada em ambiente simulado de testes (in-memory). Nenhum valor financeiro real foi cobrado.</p>
             <button class="btn btn-outline" id="btn-close-receipt-btn" style="width: 100%;">Fechar Cupom</button>
+        </div>
+    </div>
+
+    <!-- Client Profile Modal Overlay -->
+    <div id="client-profile-modal" class="info-modal-overlay">
+        <div class="info-modal-card glass-panel" style="max-width: 700px; width: 90%; padding: 2.5rem 2rem 2rem !important; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh;">
+            <button class="info-modal-close" id="btn-close-profile-modal">&times;</button>
+            <h2 style="font-size: 1.6rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--primary-light); padding-bottom: 0.5rem; color: var(--secondary); display: flex; align-items: center; gap: 0.5rem;">
+                <i data-lucide="user"></i> Minha Conta / Perfil
+            </h2>
+            
+            <!-- Tabs Navigation -->
+            <div class="profile-tabs" style="display: flex; gap: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+                <button class="profile-tab-btn active" data-tab="tab-profile-info" style="padding: 0.6rem 1rem; background: none; border: none; border-bottom: 3px solid var(--primary); font-weight: 600; color: var(--secondary); cursor: pointer; transition: all 0.3s;">Meu Perfil</button>
+                <button class="profile-tab-btn" data-tab="tab-profile-rentals" style="padding: 0.6rem 1rem; background: none; border: none; border-bottom: 3px solid transparent; font-weight: 500; color: var(--text-light); cursor: pointer; transition: all 0.3s;">Histórico de Aluguéis</button>
+                <button class="profile-tab-btn" data-tab="tab-profile-security" style="padding: 0.6rem 1rem; background: none; border: none; border-bottom: 3px solid transparent; font-weight: 500; color: var(--text-light); cursor: pointer; transition: all 0.3s;">Alterar Senha</button>
+            </div>
+            
+            <!-- Tabs Content Container (Scrollable) -->
+            <div class="profile-tabs-content" style="flex: 1; overflow-y: auto; text-align: left; padding-right: 0.5rem;">
+                
+                <!-- Tab: Meu Perfil -->
+                <div id="tab-profile-info" class="profile-tab-pane active" style="display: block;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 2rem; align-items: flex-start;">
+                        <!-- Avatar Section -->
+                        <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column; align-items: center; text-align: center; background: var(--bg-light); padding: 1.5rem; border-radius: var(--radius-lg); border: 1px solid var(--border-color);">
+                            <div class="avatar-preview-container" style="position: relative; width: 120px; height: 120px; border-radius: var(--radius-full); overflow: hidden; border: 3px solid var(--primary); margin-bottom: 1rem; background: #E5E7EB; display: flex; align-items: center; justify-content: center;">
+                                <img id="profile-avatar-img" src="img/compact.png" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
+                            <label class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem;">
+                                <i data-lucide="camera" style="width: 14px; height: 14px;"></i> Alterar Foto
+                                <input type="file" id="profile-avatar-input" accept="image/*" style="display: none;">
+                            </label>
+                            <span style="font-size: 0.7rem; color: var(--text-light); margin-top: 0.5rem;">JPG ou PNG. Max 500KB.</span>
+                        </div>
+                        
+                        <!-- Details Section -->
+                        <div style="flex: 2; min-width: 280px; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group" style="grid-column: span 2;">
+                                <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-light);">Nome Completo</label>
+                                <div id="profile-name" style="padding: 0.7rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: #F3F4F6; font-weight: 500;">---</div>
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-light);">E-mail</label>
+                                <div id="profile-email" style="padding: 0.7rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: #F3F4F6;">---</div>
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-light);">Telefone</label>
+                                <div id="profile-phone" style="padding: 0.7rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: #F3F4F6;">---</div>
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-light);">CPF</label>
+                                <div id="profile-cpf" style="padding: 0.7rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: #F3F4F6;">---</div>
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-light);">CNH (Mascarada)</label>
+                                <div id="profile-cnh" style="padding: 0.7rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: #F3F4F6;">---</div>
+                            </div>
+                            <div class="form-group" style="grid-column: span 2; display: flex; align-items: center; justify-content: space-between; background: var(--primary-light); padding: 1rem; border-radius: var(--radius-md); border: 1.5px solid rgba(255, 90, 31, 0.15);">
+                                <div>
+                                    <div style="font-size: 0.75rem; font-weight: 700; color: var(--primary-dark); text-transform: uppercase;">Programa de Fidelidade</div>
+                                    <div style="font-size: 1.25rem; font-weight: 800; color: var(--secondary);" id="profile-fidelity-level">BRONZE</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 0.75rem; color: var(--text-light); font-weight: 600;">Pontos Acumulados</div>
+                                    <div style="font-size: 1.25rem; font-weight: 800; color: var(--primary);" id="profile-fidelity-points">0 pts</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tab: Histórico de Aluguéis -->
+                <div id="tab-profile-rentals" class="profile-tab-pane" style="display: none;">
+                    <div id="profile-rentals-loader" style="display: flex; flex-direction: column; align-items: center; padding: 2rem 0; gap: 0.5rem;">
+                        <i data-lucide="loader" class="spin" style="color: var(--primary); width: 30px; height: 30px;"></i>
+                        <span style="font-size: 0.85rem; color: var(--text-light);">Carregando suas reservas...</span>
+                    </div>
+                    
+                    <div id="profile-rentals-empty" style="display: none; text-align: center; padding: 2.5rem 0;">
+                        <span style="font-size: 2.5rem;">🚗</span>
+                        <h4 style="margin-top: 0.5rem; color: var(--secondary);">Nenhum aluguel encontrado</h4>
+                        <p style="font-size: 0.8rem; color: var(--text-light);">Você ainda não alugou nenhum veículo conosco. Que tal escolher um carro da nossa frota?</p>
+                    </div>
+                    
+                    <div id="profile-rentals-container" style="display: none;">
+                        <table class="premium-table" style="width: 100%; font-size: 0.85rem; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border-color); text-align: left;">
+                                    <th style="padding: 0.75rem;">Veículo</th>
+                                    <th style="padding: 0.75rem;">Retirada / Devolução</th>
+                                    <th style="padding: 0.75rem;">Valor Total</th>
+                                    <th style="padding: 0.75rem;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="profile-rentals-tbody">
+                                <!-- Preenchido dinamicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Tab: Alterar Senha -->
+                <div id="tab-profile-security" class="profile-tab-pane" style="display: none;">
+                    <form id="profile-password-form" style="max-width: 400px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem;">
+                        <div id="profile-password-error" class="error-msg" style="display: none; padding: 0.75rem; border-radius: var(--radius-md); font-size: 0.8rem;"></div>
+                        <div id="profile-password-success" class="success-msg" style="display: none; padding: 0.75rem; border-radius: var(--radius-md); font-size: 0.8rem; background: var(--primary-light); color: var(--primary-dark); border: 1px solid rgba(255, 90, 31, 0.15); font-weight: 600;"></div>
+                        
+                        <div class="form-group">
+                            <label for="profile-password-old">Senha Atual</label>
+                            <input type="password" id="profile-password-old" required placeholder="Digite sua senha atual" style="width: 100%; padding: 0.7rem; border: 2px solid var(--border-color); border-radius: var(--radius-md);">
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-password-new">Nova Senha</label>
+                            <input type="password" id="profile-password-new" required placeholder="Mínimo 6 caracteres" style="width: 100%; padding: 0.7rem; border: 2px solid var(--border-color); border-radius: var(--radius-md);">
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-password-confirm">Confirmar Nova Senha</label>
+                            <input type="password" id="profile-password-confirm" required placeholder="Repita a nova senha" style="width: 100%; padding: 0.7rem; border: 2px solid var(--border-color); border-radius: var(--radius-md);">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" style="padding: 0.8rem; margin-top: 0.5rem; width: 100%;">Alterar Senha</button>
+                    </form>
+                </div>
+                
+            </div>
         </div>
     </div>
 

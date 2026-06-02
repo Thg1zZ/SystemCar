@@ -464,6 +464,19 @@ a {
     letter-spacing: 0.05em;
 }
 
+/* Badge inline para uso em tabelas e listas — sem position absolute */
+.badge-inline {
+    display: inline-block;
+    padding: 0.2rem 0.65rem;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
 .badge-primary {
     background-color: var(--primary);
     color: white;
@@ -1352,6 +1365,14 @@ a {
     z-index: 1000000 !important; /* Acima de tudo e do header */
 }
 
+/* Quando um sub-modal admin está aberto, remove o backdrop-filter do overlay
+   principal para evitar que ele crie um stacking context isolado que impede
+   os sub-modais de aparecerem na frente do painel. */
+.admin-dashboard-overlay.sub-modal-open {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
 .admin-dashboard-container {
     width: 95% !important;
     height: 90vh !important;
@@ -1374,9 +1395,8 @@ a {
 }
 
 .admin-dashboard-close {
-    position: absolute !important;
-    top: 1rem !important;
-    right: 1.5rem !important;
+    /* Posicionamento gerenciado pelo admin-main-header (flex) */
+    flex-shrink: 0;
     z-index: 10;
 }
 
@@ -1449,10 +1469,30 @@ a {
     height: 18px;
 }
 
+/* Wrapper flex-column que envolve header + main + banner */
+.admin-main-wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: var(--bg-main);
+    min-width: 0; /* Evita overflow em flex */
+}
+
+/* Faixa de header com o botão fechar — fica sempre acima do conteúdo */
+.admin-main-header {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0.6rem 1.25rem 0;
+    flex-shrink: 0;
+    background-color: var(--bg-main);
+}
+
 /* Main Content Area */
 .admin-main-content {
     flex-grow: 1;
-    padding: 3rem 2.5rem;
+    padding: 1.5rem 2.5rem 2rem;
     overflow-y: auto;
     background-color: var(--bg-main);
 }
@@ -1663,6 +1703,195 @@ a {
     background-color: var(--bg-light);
 }
 
+/* ==========================================================================
+   Aba de Manutenção — Admin Dashboard
+   ========================================================================== */
+
+.maint-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.maint-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1.4rem;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.maint-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--danger);
+}
+
+/* Faixa colorida no topo do card por tipo de manutenção */
+.maint-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--danger);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.maint-card.type-preventive::before { background: #3B82F6; }
+.maint-card.type-corrective::before { background: var(--danger); }
+.maint-card.type-tires::before      { background: #8B5CF6; }
+.maint-card.type-oil::before        { background: #F59E0B; }
+
+.maint-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.maint-car-info h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--secondary);
+    margin: 0 0 0.15rem;
+}
+
+.maint-car-info p {
+    font-size: 0.78rem;
+    color: var(--text-light);
+    margin: 0;
+}
+
+.maint-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--radius-full);
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.type-preventive .maint-type-badge { background: #EFF6FF; color: #2563EB; }
+.type-corrective .maint-type-badge { background: #FEE2E2; color: var(--danger); }
+.type-tires .maint-type-badge      { background: #F3E8FF; color: #7C3AED; }
+.type-oil .maint-type-badge        { background: #FEF3C7; color: #D97706; }
+
+.maint-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.maint-info-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    color: var(--text-main);
+}
+
+.maint-info-row i {
+    width: 14px;
+    height: 14px;
+    color: var(--text-light);
+    flex-shrink: 0;
+}
+
+.maint-info-row strong {
+    color: var(--secondary);
+    font-weight: 600;
+}
+
+/* Barra de progresso da manutenção */
+.maint-progress-wrapper {
+    margin-top: 0.25rem;
+}
+
+.maint-progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-light);
+    margin-bottom: 0.35rem;
+}
+
+.maint-progress-bar-track {
+    height: 8px;
+    background: var(--bg-light);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.maint-progress-bar-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    background: linear-gradient(90deg, #3B82F6, #60A5FA);
+    transition: width 1s ease;
+}
+
+.maint-card.type-corrective .maint-progress-bar-fill { background: linear-gradient(90deg, var(--danger), #F87171); }
+.maint-card.type-tires .maint-progress-bar-fill      { background: linear-gradient(90deg, #7C3AED, #A78BFA); }
+.maint-card.type-oil .maint-progress-bar-fill        { background: linear-gradient(90deg, #D97706, #FCD34D); }
+
+.maint-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.8rem;
+}
+
+.maint-cost {
+    font-weight: 700;
+    color: var(--secondary);
+}
+
+.maint-urgency {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: var(--radius-full);
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.urgency-high   { background: #FEE2E2; color: var(--danger); }
+.urgency-medium { background: #FEF3C7; color: #D97706; }
+.urgency-low    { background: #ECFDF5; color: var(--success); }
+
+/* Progress bar na tabela de detalhamento */
+.table-progress-track {
+    height: 6px;
+    background: var(--bg-light);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    min-width: 80px;
+}
+
+.table-progress-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    background: linear-gradient(90deg, var(--primary), #FB923C);
+    transition: width 1.2s ease;
+}
+
 /* CSS Responsivo para Admin Dashboard */
 @media (max-width: 900px) {
     .admin-dashboard-container {
@@ -1674,6 +1903,7 @@ a {
         border-right: none;
         border-bottom: 1px solid var(--border-color);
         padding: 1.5rem;
+        display: flex !important;
         flex-direction: row !important;
         justify-content: space-between;
         align-items: center;
@@ -1690,19 +1920,112 @@ a {
     .admin-nav {
         flex-direction: row !important;
         gap: 0.5rem;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        width: 100%;
+        padding-bottom: 0.25rem;
     }
     .admin-nav-item {
         padding: 0.5rem 1rem !important;
         font-size: 0.85rem;
+        flex-shrink: 0 !important;
     }
     .admin-main-content {
         padding: 2rem 1.5rem !important;
     }
 }
 
+@media (max-width: 600px) {
+    .admin-sidebar {
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+        padding: 1rem !important;
+        align-items: center !important;
+    }
+    .admin-logo-wrapper {
+        margin-bottom: 0.15rem;
+    }
+    .admin-logo-wrapper img {
+        height: 32px !important;
+    }
+    .admin-badge {
+        font-size: 0.65rem !important;
+        padding: 0.15rem 0.5rem !important;
+    }
+    .admin-nav {
+        width: 100% !important;
+        justify-content: flex-start !important;
+    }
+    .admin-main-content {
+        padding: 1.25rem 1rem !important;
+    }
+    .admin-page-title {
+        font-size: 1.35rem !important;
+        margin-bottom: 1.25rem !important;
+        padding-bottom: 0.5rem !important;
+    }
+    .visual-card {
+        padding: 1.25rem !important;
+    }
+    .distribution-label {
+        width: 110px !important;
+        font-size: 0.85rem !important;
+    }
+    .distribution-count {
+        font-size: 0.95rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-kpi-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 0.75rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+    .kpi-card {
+        padding: 1rem !important;
+        gap: 0.6rem !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        text-align: left !important;
+    }
+    .kpi-icon-wrapper {
+        width: 40px !important;
+        height: 40px !important;
+    }
+    .kpi-icon-wrapper i {
+        width: 18px !important;
+        height: 18px !important;
+    }
+    .kpi-value {
+        font-size: 1.1rem !important;
+    }
+    .kpi-title {
+        font-size: 0.75rem !important;
+    }
+    .admin-table th, .admin-table td {
+        padding: 0.75rem 0.85rem !important;
+        font-size: 0.8rem !important;
+        white-space: nowrap !important;
+    }
+    .btn-admin-action {
+        padding: 0.3rem 0.6rem !important;
+        font-size: 0.75rem !important;
+    }
+}
+
 /* ==========================================================================
    Admin Operational Buttons, Modals, Forms & Fictitious Fines Receipt Styling
    ========================================================================== */
+
+/* Correção de Z-Index para os Modais do Painel Administrativo e Cliente */
+#vehicle-form-modal,
+#maintenance-form-modal,
+#return-form-modal,
+#receipt-modal,
+#client-profile-modal {
+    z-index: 2000000 !important;
+}
 
 .admin-action-btn-group {
     display: flex;
@@ -1748,5 +2071,165 @@ a {
 
 .receipt-content hr {
     border-top: 1px dashed #ccc !important;
+}
+
+/* ==========================================================================
+   Persistent Floating Portfolio Hub (Bottom-Left)
+   ========================================================================== */
+
+.portfolio-badge {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    z-index: 99999; /* Fica acima de tudo, exceto modais de tela cheia */
+    background: var(--primary) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1.5px solid var(--primary-dark) !important;
+    border-radius: var(--radius-md);
+    padding: 0.875rem 1.25rem;
+    box-shadow: 0 8px 30px rgba(255, 90, 31, 0.3) !important;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    max-width: 320px;
+    pointer-events: auto;
+    animation: badge-pulse-border 3s infinite alternate;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.badge-icon {
+    font-size: 1.45rem;
+    animation: icon-wiggle 2.5s infinite ease-in-out;
+    display: inline-block;
+}
+
+.badge-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.badge-text strong {
+    font-size: 0.85rem;
+    color: #FFFFFF !important;
+    font-weight: 750;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.badge-text span {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.9) !important;
+    line-height: 1.3;
+    font-weight: 550;
+}
+
+@keyframes badge-pulse-border {
+    0% {
+        border-color: rgba(255, 255, 255, 0.4);
+        box-shadow: 0 8px 24px rgba(255, 90, 31, 0.2);
+    }
+    100% {
+        border-color: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 8px 32px rgba(255, 90, 31, 0.5);
+    }
+}
+
+@keyframes icon-wiggle {
+    0%, 100% { transform: rotate(0deg); }
+    15% { transform: rotate(-10deg) scale(1.1); }
+    30% { transform: rotate(10deg) scale(1.1); }
+    45% { transform: rotate(-5deg) scale(1.05); }
+    60% { transform: rotate(5deg) scale(1.05); }
+    75% { transform: rotate(0deg); }
+}
+
+/* Responsividade móvel do badge */
+@media (max-width: 480px) {
+    .portfolio-badge {
+        bottom: 12px;
+        left: 12px;
+        right: 12px;
+        max-width: calc(100% - 24px);
+        padding: 0.75rem 1rem;
+    }
+}
+
+/* ==========================================================================
+   Client Profile & Minha Conta
+   ========================================================================== */
+
+.profile-tab-btn {
+    border-bottom: 3px solid transparent;
+    color: var(--text-light);
+    font-size: 0.95rem;
+    font-family: inherit;
+    padding: 0.6rem 1rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 550;
+    transition: var(--transition);
+}
+
+.profile-tab-btn:hover {
+    color: var(--primary);
+}
+
+.profile-tab-btn.active {
+    border-bottom-color: var(--primary) !important;
+    color: var(--secondary) !important;
+    font-weight: 700 !important;
+}
+
+.avatar-preview-container img {
+    transition: transform 0.3s ease;
+}
+
+.avatar-preview-container:hover img {
+    transform: scale(1.1);
+}
+
+#tab-profile-info .form-group label {
+    margin-bottom: 0.35rem;
+    display: inline-block;
+}
+
+.premium-table th, .premium-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.premium-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.premium-table tbody tr:hover {
+    background-color: var(--bg-light);
+}
+
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.status-badge.pending {
+    background-color: var(--primary-light);
+    color: var(--primary-dark);
+}
+
+.status-badge.active {
+    background-color: #E0F2FE;
+    color: #0369A1;
+}
+
+.status-badge.completed {
+    background-color: #D1FAE5;
+    color: #065F46;
 }
 

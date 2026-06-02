@@ -28,6 +28,6 @@ public interface RentalRepository extends JpaRepository<Rental, UUID> {
 
     long countByStatus(com.rodalivre.domain.enums.RentalStatus status);
 
-    @Query("SELECT COALESCE(SUM(r.totalCost), 0) FROM Rental r WHERE r.status = 'COMPLETED'")
+    @Query("SELECT SUM(r.totalCost) FROM Rental r WHERE r.status = com.rodalivre.domain.enums.RentalStatus.COMPLETED")
     java.math.BigDecimal sumCompletedRentalsRevenue();
 }

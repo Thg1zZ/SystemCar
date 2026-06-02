@@ -25,6 +25,12 @@ public class RentalController {
         return ResponseEntity.ok(rentalService.getAllRentals());
     }
 
+    @GetMapping("/me")
+    @PreAuthorize("hasAnyRole('CLIENT', 'OPERATOR', 'ADMIN')")
+    public ResponseEntity<List<RentalResponse>> getMyRentals() {
+        return ResponseEntity.ok(rentalService.getMyRentals());
+    }
+
     @PostMapping
     @PreAuthorize("hasAnyRole('CLIENT', 'OPERATOR', 'ADMIN')")
     public ResponseEntity<RentalResponse> createRental(@Valid @RequestBody RentalRequest request) {

@@ -71,6 +71,9 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "avatar", columnDefinition = "TEXT")
+    private String avatar;
+
     public FidelityLevel getFidelityLevel() {
         return FidelityLevel.fromPoints(this.fidelityPoints != null ? this.fidelityPoints : 0);
     }

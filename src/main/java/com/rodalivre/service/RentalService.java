@@ -43,6 +43,13 @@ public class RentalService {
                 .collect(Collectors.toList());
     }
 
+    public List<RentalResponse> getMyRentals() {
+        UserDetailsImpl currentUser = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return rentalRepository.findByUserId(currentUser.getId()).stream()
+                .map(RentalResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public RentalResponse createRental(RentalRequest request) {
         UserDetailsImpl currentUser = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
