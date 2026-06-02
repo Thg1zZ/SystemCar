@@ -160,7 +160,7 @@ public class RentalService {
         vehicleRepository.save(vehicle);
 
         // 5. Conceder pontos de fidelidade (100 pontos por aluguel concluído)
-        user.setFidelityPoints(points + 100);
+        user.setFidelityPoints(user.getFidelityPoints() + 100);
         userRepository.save(user);
 
         rental.setStatus(RentalStatus.COMPLETED);
