@@ -93,6 +93,14 @@ function setupSearchForm() {
             return;
         }
 
+        const pickup = new Date(pickupDate);
+        const returnD = new Date(returnDate);
+
+        if (returnD <= pickup) {
+            alert('Erro: A data de devolução deve ser posterior à data de retirada!');
+            return;
+        }
+
         const btn = form.querySelector('button[type="submit"]');
         const originalText = btn.innerHTML;
 

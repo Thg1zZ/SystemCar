@@ -67,8 +67,13 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // APENAS ORIGENS PERMITIDAS COMO MANDAM AS REGRAS DE SEGURANÇA DO AGENTS.MD
-        configuration.setAllowedOrigins(List.of("http://localhost:5500", "http://127.0.0.1:5500")); 
+        // Permite origens locais e subdomínios da Vercel para o portfólio
+        configuration.setAllowedOriginPatterns(List.of(
+                "https://*.vercel.app", 
+                "http://localhost:5500", 
+                "http://127.0.0.1:5500",
+                "http://localhost:3000"
+        )); 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
