@@ -32,6 +32,7 @@ public class User {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    @Convert(converter = com.rodalivre.util.AesEncryptorConverter.class)
     @Column(nullable = false)
     private String cpf;
 
@@ -41,11 +42,19 @@ public class User {
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
 
+    @Convert(converter = com.rodalivre.util.AesEncryptorConverter.class)
     @Column(nullable = false, length = 20)
     private String cnh;
 
     @Column(name = "cnh_expiration_date")
     private LocalDate cnhExpirationDate;
+
+    @Builder.Default
+    @Column(name = "terms_accepted")
+    private Boolean termsAccepted = false;
+
+    @Column(name = "terms_accepted_at")
+    private LocalDateTime termsAcceptedAt;
 
     @Builder.Default
     @Column(name = "inadimplente")

@@ -179,6 +179,8 @@ function initInfoModals() {
     setupModal('link-terms', 'terms-modal', 'btn-close-terms');
     setupModal('link-privacy', 'privacy-modal', 'btn-close-privacy');
     setupModal('link-about', 'about-modal', 'btn-close-about');
+    setupModal('reg-link-terms', 'terms-modal', 'btn-close-terms');
+    setupModal('reg-link-privacy', 'privacy-modal', 'btn-close-privacy');
 }
 
 /**
@@ -582,6 +584,7 @@ function initAuth() {
             const cpf = document.getElementById('reg-cpf').value;
             const cnh = document.getElementById('reg-cnh').value;
             const cnhExpirationDate = document.getElementById('reg-cnh-expiration').value;
+            const termsAccepted = document.getElementById('reg-terms-accepted').checked;
             const errorDiv = document.getElementById('register-error');
             const submitBtn = registerForm.querySelector('button[type="submit"]');
             
@@ -590,11 +593,25 @@ function initAuth() {
             submitBtn.textContent = 'Cadastrando...';
             
             try {
+                if (!termsAccepted) {
+                    throw new Error('Você deve ler e aceitar os Termos de Uso e Política de Privacidade.');
+                }
                 if (password.length < 6) {
                     throw new Error('A senha deve ter pelo menos 6 caracteres.');
                 }
                 if (cnh.replace(/\D/g, '').length !== 11) {
                     throw new Error('A CNH deve ter exatamente 11 dígitos.');
+                }
+                
+                const birth = new Date(birthDate);
+                const today = new Date();
+                let age = today.getFullYear() - birth.getFullYear();
+                const m = today.getMonth() - birth.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+                    age--;
+                }
+                if (age < 18) {
+                    throw new Error('Você deve ter pelo menos 18 anos para se cadastrar.');
                 }
                 
                 const response = await fetch(`${API_BASE_URL}/auth/register`, {
@@ -607,7 +624,8 @@ function initAuth() {
                         cpf: cpf.replace(/\D/g, ''),
                         cnh: cnh.replace(/\D/g, ''),
                         cnhExpirationDate,
-                        birthDate
+                        birthDate,
+                        termsAccepted
                     })
                 });
                 

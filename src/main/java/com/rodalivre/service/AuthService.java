@@ -56,6 +56,10 @@ public class AuthService {
             throw new LocadoraException("Erro: CPF já está cadastrado!");
         }
 
+        if (java.time.temporal.ChronoUnit.YEARS.between(registerRequest.getBirthDate(), java.time.LocalDate.now()) < 18) {
+            throw new LocadoraException("Erro: O usuário deve ter pelo menos 18 anos para se cadastrar.");
+        }
+
         User user = User.builder()
                 .fullName(registerRequest.getFullName())
                 .email(registerRequest.getEmail())
@@ -66,6 +70,8 @@ public class AuthService {
                 .inadimplente(false)
                 .phone(registerRequest.getPhone())
                 .birthDate(registerRequest.getBirthDate())
+                .termsAccepted(registerRequest.getTermsAccepted())
+                .termsAcceptedAt(java.time.LocalDateTime.now())
                 .role(UserRole.CLIENT)
                 .build();
 

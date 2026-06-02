@@ -37,4 +37,8 @@ public class RegisterRequest {
 
     @NotNull(message = "Data de nascimento é obrigatória")
     private LocalDate birthDate;
+
+    @NotNull(message = "O aceite dos termos é obrigatório")
+    @jakarta.validation.constraints.AssertTrue(message = "Você precisa aceitar os termos de uso e política de privacidade")
+    private Boolean termsAccepted;
 }

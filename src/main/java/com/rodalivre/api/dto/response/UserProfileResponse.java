@@ -27,14 +27,37 @@ public class UserProfileResponse {
                 .id(user.getId())
                 .fullName(user.getFullName())
                 .email(user.getEmail())
-                .cpf(user.getCpf())
-                .phone(user.getPhone())
+                .cpf(maskCpf(user.getCpf()))
+                .phone(maskPhone(user.getPhone()))
                 .birthDate(user.getBirthDate())
-                .cnh(user.getCnh())
+                .cnh(maskCnh(user.getCnh()))
                 .cnhExpirationDate(user.getCnhExpirationDate())
                 .fidelityPoints(user.getFidelityPoints() != null ? user.getFidelityPoints() : 0)
                 .fidelityLevel(user.getFidelityLevel().name())
                 .avatar(user.getAvatar())
                 .build();
+    }
+
+    private static String maskCpf(String cpf) {
+        if (cpf == null) return null;
+        String clean = cpf.replaceAll("\\D", "");
+        if (clean.length() < 11) return "***.***.***-**";
+        return clean.substring(0, 3) + ".***.***-" + clean.substring(9);
+    }
+
+    private static String maskCnh(String cnh) {
+        if (cnh == null) return null;
+        String clean = cnh.replaceAll("\\D", "");
+        if (clean.length() < 11) return "***********";
+        return clean.substring(0, 3) + "******" + clean.substring(9);
+    }
+
+    private static String maskPhone(String phone) {
+        if (phone == null || phone.trim().isEmpty()) return "";
+        String clean = phone.replaceAll("\\D", "");
+        if (clean.length() >= 10) {
+            return "(" + clean.substring(0, 2) + ") *****-" + clean.substring(clean.length() - 4);
+        }
+        return phone;
     }
 }
