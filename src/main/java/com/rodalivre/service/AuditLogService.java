@@ -42,11 +42,23 @@ public class AuditLogService {
                 .action(action)
                 .entity(entity)
                 .entityId(entityId)
-                .oldValue(oldValue)
-                .newValue(newValue)
+                .oldValue(maskIfSensitive(oldValue, entity))
+                .newValue(maskIfSensitive(newValue, entity))
                 .ipAddress(ipAddress)
                 .build();
 
         auditLogRepository.save(log);
     }
+
+    private String maskIfSensitive(String value, String entity) {
+        if (value == null || value.trim().isEmpty() || "NONE".equalsIgnoreCase(value)) {
+            return value;
+        }
+        if ("User".equalsIgnoreCase(entity) || "Cliente".equalsIgnoreCase(entity)) {
+            // Mascara hashes de senhas (geralmente começam com $2a$), CPF e CNH limpos ou com formatos comuns
+            if (value.startsWith("$2a$") || value.length() >= 30 || value.matches("\\d{11}") || value.matches("\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}")) {
+                return "[DADO PROTEGIDO POR LGPD]";
+            }
+        }
+        return value;
 }
