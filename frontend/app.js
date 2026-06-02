@@ -943,18 +943,26 @@ function openBookingModal(vehicle) {
     const heroReturnDate = document.getElementById('return-date').value;
     const heroPickupBranch = document.getElementById('pickup-location').value;
     
-    if (heroPickupDate) {
+    let isDatesValid = false;
+    if (heroPickupDate && heroReturnDate) {
+        const hPickup = new Date(heroPickupDate);
+        const hReturn = new Date(heroReturnDate);
+        const now = new Date();
+        // Permite a mesma data se as horas não passarem no check de dia inteiro, mas a regra exige > pickup e >= now
+        if (hReturn > hPickup && hPickup >= now) {
+            isDatesValid = true;
+        }
+    }
+
+    if (isDatesValid) {
         document.getElementById('booking-pickup-date').value = heroPickupDate;
+        document.getElementById('booking-return-date').value = heroReturnDate;
     } else {
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         tomorrow.setHours(9, 0, 0, 0);
         document.getElementById('booking-pickup-date').value = tomorrow.toISOString().slice(0, 16);
-    }
-    
-    if (heroReturnDate) {
-        document.getElementById('booking-return-date').value = heroReturnDate;
-    } else {
+        
         const afterTomorrow = new Date();
         afterTomorrow.setDate(afterTomorrow.getDate() + 2);
         afterTomorrow.setHours(9, 0, 0, 0);
