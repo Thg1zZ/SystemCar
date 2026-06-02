@@ -6,6 +6,7 @@ const API_BASE_URL = 'http://localhost:8080/api/v1';
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Initializations
+    initSplashScreen();
     initHeaderScroll();
     loadBranches();
     loadVehicles();
@@ -13,6 +14,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Event Listeners
     setupSearchForm();
 });
+
+/**
+ * Controls the fade-out of the Premium Splash Screen
+ */
+function initSplashScreen() {
+    const splash = document.getElementById('splash-screen');
+    if (!splash) return;
+    
+    // O tempo coincide com a finalização das animações (4.5 segundos)
+    setTimeout(() => {
+        splash.classList.add('fade-out');
+        setTimeout(() => {
+            splash.style.display = 'none';
+        }, 800); // tempo correspondente à transição de fade CSS
+    }, 4500);
+}
 
 /**
  * Adds glass effect to header on scroll
@@ -127,7 +144,7 @@ async function loadVehicles() {
                 // Placeholder se vier sem imageUrls
                 img.src = vehicle.imageUrls && vehicle.imageUrls.length > 0 ? 
                     vehicle.imageUrls[0] : 
-                    'file:///C:/Users/Thiago%20Gomes/.gemini/antigravity-ide/brain/bb8aca2d-5372-448f-a77a-3faea68385f1/car_compact_1779913298163.png';
+                    'img/compact.png';
                 img.alt = vehicle.model;
                 
                 const badge = document.createElement('span');
@@ -187,6 +204,11 @@ async function loadVehicles() {
                 btn.className = 'btn btn-primary';
                 btn.textContent = 'Reservar';
                 
+                priceAction.appendChild(price);
+                priceAction.appendChild(btn);
+                
+                info.appendChild(title);
+                info.appendChild(features);
                 priceAction.appendChild(price);
                 priceAction.appendChild(btn);
                 

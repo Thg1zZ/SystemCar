@@ -13,11 +13,45 @@
 </head>
 <body>
 
+    <!-- Splash Screen Premium -->
+    <div id="splash-screen">
+        <div class="splash-content">
+            <div class="logo-container">
+                <div class="logo-part part-top-left"><img src="img/logo.png" alt="RodaLivre Logo"></div>
+                <div class="logo-part part-top-right"><img src="img/logo.png" alt="RodaLivre Logo"></div>
+                <div class="logo-part part-bottom-left"><img src="img/logo.png" alt="RodaLivre Logo"></div>
+                <div class="logo-part part-bottom-right"><img src="img/logo.png" alt="RodaLivre Logo"></div>
+            </div>
+            
+            <div class="car-animation-wrapper">
+                <div class="car-track">
+                    <div class="car-element">
+                        <svg class="car-svg" viewBox="0 0 100 40" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Car body profile -->
+                            <path d="M 15 30 L 22 30 C 23 26, 27 26, 28 30 L 72 30 C 73 26, 77 26, 78 30 L 88 30 C 92 30, 95 28, 92 23 L 83 15 C 80 12, 75 10, 68 10 L 38 10 C 32 10, 24 13, 20 18 L 12 25 C 10 27, 10 30, 15 30 Z" fill="var(--primary)" />
+                            <!-- Windows -->
+                            <path d="M 38 13 L 53 13 L 53 19 L 28 19 C 32 15, 35 13, 38 13 Z" fill="#0b0f19" opacity="0.85" />
+                            <path d="M 56 13 L 68 13 C 72 13, 75 15, 77 18 L 79 20 L 56 20 Z" fill="#0b0f19" opacity="0.85" />
+                            <!-- Wheels -->
+                            <circle cx="25" cy="30" r="4.5" fill="#111827" stroke="var(--primary)" stroke-width="1.5" />
+                            <circle cx="25" cy="30" r="1.5" fill="white" />
+                            <circle cx="75" cy="30" r="4.5" fill="#111827" stroke="var(--primary)" stroke-width="1.5" />
+                            <circle cx="75" cy="30" r="1.5" fill="white" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="loading-text">
+                    Acelerando sua jornada<span class="dots">...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Header -->
     <header class="header" id="main-header">
         <div class="container header-container">
             <a href="#" class="logo">
-                <img src="file:///C:/Users/Thiago%20Gomes/.gemini/antigravity-ide/brain/bb8aca2d-5372-448f-a77a-3faea68385f1/logo_rodalivre_texto_1779914172197.png" alt="RodaLivre Logo">
+                <img src="img/logo.png" alt="RodaLivre Logo">
             </a>
             <nav class="nav-links">
                 <a href="#frota">Nossa Frota</a>
@@ -60,7 +94,7 @@
                         <label for="return-date"><i data-lucide="calendar-check"></i> Data de Devolução</label>
                         <input type="datetime-local" id="return-date" required>
                     </div>
-
+ 
                     <button type="submit" class="btn btn-primary btn-large btn-search">
                         <i data-lucide="search"></i> Buscar Veículos
                     </button>
@@ -121,7 +155,7 @@
                 <!-- Card Skeleton Demo -->
                 <div class="vehicle-card">
                     <div class="vehicle-img-wrapper">
-                        <img src="file:///C:/Users/Thiago%20Gomes/.gemini/antigravity-ide/brain/bb8aca2d-5372-448f-a77a-3faea68385f1/car_suv_1779913269548.png" alt="Carro SUV">
+                        <img src="img/suv.png" alt="Carro SUV">
                         <span class="badge badge-primary">SUV Premium</span>
                     </div>
                     <div class="vehicle-info">
@@ -144,7 +178,7 @@
                 <!-- Card Skeleton Demo 2 -->
                 <div class="vehicle-card">
                     <div class="vehicle-img-wrapper">
-                        <img src="file:///C:/Users/Thiago%20Gomes/.gemini/antigravity-ide/brain/bb8aca2d-5372-448f-a77a-3faea68385f1/car_sedan_1779913285232.png" alt="Carro Sedan">
+                        <img src="img/sedan.png" alt="Carro Sedan">
                         <span class="badge badge-primary">Sedan Executivo</span>
                     </div>
                     <div class="vehicle-info">
@@ -167,7 +201,7 @@
                  <!-- Card Skeleton Demo 3 -->
                  <div class="vehicle-card">
                     <div class="vehicle-img-wrapper">
-                        <img src="file:///C:/Users/Thiago%20Gomes/.gemini/antigravity-ide/brain/bb8aca2d-5372-448f-a77a-3faea68385f1/car_compact_1779913298163.png" alt="Carro Compacto">
+                        <img src="img/compact.png" alt="Carro Compacto">
                         <span class="badge badge-primary">Econômico</span>
                     </div>
                     <div class="vehicle-info">
@@ -195,7 +229,7 @@
     <footer class="footer">
         <div class="container footer-grid">
             <div class="footer-brand">
-                <img src="file:///C:/Users/Thiago%20Gomes/.gemini/antigravity-ide/brain/bb8aca2d-5372-448f-a77a-3faea68385f1/logo_rodalivre_texto_1779914172197.png" alt="RodaLivre Logo" class="footer-logo">
+                <img src="img/logo.png" alt="RodaLivre Logo" class="footer-logo">
                 <p>Acelere seus sonhos com a locadora que mais cresce no Brasil. Qualidade, segurança e os melhores preços.</p>
             </div>
             <div class="footer-links">
