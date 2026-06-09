@@ -16,6 +16,8 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -39,7 +41,7 @@ public class JwtTokenProvider {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
-        java.util.List<String> roleList = userPrincipal.getAuthorities().stream()
+        List<String> roleList = userPrincipal.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
         String role = roleList.isEmpty() ? "" : roleList.get(0);
@@ -50,7 +52,7 @@ public class JwtTokenProvider {
                 .claim("email", userPrincipal.getUsername())
                 .claim("role", role)
                 .claim("roles", rolesStr)
-                .id(java.util.UUID.randomUUID().toString()) // jti (UUID unico por token)
+                .id(UUID.randomUUID().toString()) // jti (UUID unico por token)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(getSigningKey())
@@ -67,14 +69,14 @@ public class JwtTokenProvider {
         return claims.get("email", String.class);
     }
 
-    public java.util.UUID getUserIdFromJWT(String token) {
+    public UUID getUserIdFromJWT(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
 
-        return java.util.UUID.fromString(claims.getSubject());
+        return UUID.fromString(claims.getSubject());
     }
 
     public boolean validateToken(String authToken) {

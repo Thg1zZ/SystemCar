@@ -3,6 +3,7 @@ package com.rodalivre.util;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import javax.crypto.Cipher;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
@@ -45,7 +46,7 @@ public class AesEncryptorConverter implements AttributeConverter<String, String>
             // Gerando um IV aleatório de 12 bytes para GCM (tamanho recomendado)
             byte[] iv = new byte[12];
             secureRandom.nextBytes(iv);
-            javax.crypto.spec.GCMParameterSpec parameterSpec = new javax.crypto.spec.GCMParameterSpec(128, iv);
+            GCMParameterSpec parameterSpec = new GCMParameterSpec(128, iv);
 
             Cipher cipher = Cipher.getInstance(ALGORITHM_GCM);
             cipher.init(Cipher.ENCRYPT_MODE, keySpec, parameterSpec);
@@ -78,7 +79,7 @@ public class AesEncryptorConverter implements AttributeConverter<String, String>
                 
                 byte[] iv = new byte[12];
                 System.arraycopy(combined, 0, iv, 0, 12);
-                javax.crypto.spec.GCMParameterSpec parameterSpec = new javax.crypto.spec.GCMParameterSpec(128, iv);
+                GCMParameterSpec parameterSpec = new GCMParameterSpec(128, iv);
 
                 int encryptedSize = combined.length - 12;
                 byte[] encryptedData = new byte[encryptedSize];

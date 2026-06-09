@@ -4,7 +4,11 @@ import com.rodalivre.api.dto.request.UpdatePasswordRequest;
 import com.rodalivre.api.dto.request.UpdateAvatarRequest;
 import com.rodalivre.api.dto.response.UserProfileResponse;
 import com.rodalivre.api.dto.response.LgpdDataResponse;
+import java.time.LocalDate;
+import java.util.UUID;
 import com.rodalivre.domain.entity.User;
+import com.rodalivre.domain.enums.RentalStatus;
+import com.rodalivre.repository.RentalRepository;
 import com.rodalivre.exception.LocadoraException;
 import com.rodalivre.repository.UserRepository;
 import com.rodalivre.security.UserDetailsImpl;
@@ -20,7 +24,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final com.rodalivre.repository.RentalRepository rentalRepository;
+    private final RentalRepository rentalRepository;
     private final AuditLogService auditLogService;
 
     public UserProfileResponse getUserProfile() {
@@ -77,16 +81,16 @@ public class UserService {
 
         // Verificar alugueis ativos, pendentes ou confirmados
         boolean possuiAluguelAtivo = rentalRepository.findByUserId(user.getId()).stream()
-                .anyMatch(r -> r.getStatus() == com.rodalivre.domain.enums.RentalStatus.ACTIVE || 
-                               r.getStatus() == com.rodalivre.domain.enums.RentalStatus.CONFIRMED || 
-                               r.getStatus() == com.rodalivre.domain.enums.RentalStatus.PENDING);
+                .anyMatch(r -> r.getStatus() == RentalStatus.ACTIVE || 
+                               r.getStatus() == RentalStatus.CONFIRMED || 
+                               r.getStatus() == RentalStatus.PENDING);
         if (possuiAluguelAtivo) {
             throw new LocadoraException("Não é possível excluir a conta pois você possui reservas ativas, confirmadas ou pendentes.");
         }
 
         // Anonimizacao para o direito ao esquecimento (LGPD) mantendo os registros financeiros de auditoria
         user.setFullName("Usuário Anonimizado");
-        user.setEmail("deleted-" + java.util.UUID.randomUUID() + "@systemcar.com.br");
+        user.setEmail("deleted-" + UUID.randomUUID() + "@systemcar.com.br");
         user.setPasswordHash("DELETED_USER_PASSWORD_HASH");
         user.setCpf("00000000000");
         user.setCnh("00000000000");

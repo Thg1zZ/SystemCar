@@ -2,7 +2,6 @@ package com.rodalivre.security;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Refill;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,7 +36,10 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         // 1. Rate Limiting Global: 100 req/min por IP
         Bucket globalBucket = globalBuckets.computeIfAbsent(ip, key -> 
             Bucket.builder()
-                .addLimit(Bandwidth.classic(100, Refill.intervally(100, Duration.ofMinutes(1))))
+                .addLimit(Bandwidth.builder()
+                    .capacity(100)
+                    .refillIntervally(100, Duration.ofMinutes(1))
+                    .build())
                 .build()
         );
 
@@ -51,7 +53,10 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             // Login: maximo 5 tentativas em 10 minutos por IP
             Bucket loginBucket = loginBuckets.computeIfAbsent(ip, key -> 
                 Bucket.builder()
-                    .addLimit(Bandwidth.classic(5, Refill.intervally(5, Duration.ofMinutes(10))))
+                    .addLimit(Bandwidth.builder()
+                        .capacity(5)
+                        .refillIntervally(5, Duration.ofMinutes(10))
+                        .build())
                     .build()
             );
 
@@ -63,7 +68,10 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             // Registro: maximo 3 tentativas por minuto por IP
             Bucket registerBucket = registerBuckets.computeIfAbsent(ip, key -> 
                 Bucket.builder()
-                    .addLimit(Bandwidth.classic(3, Refill.intervally(3, Duration.ofMinutes(1))))
+                    .addLimit(Bandwidth.builder()
+                        .capacity(3)
+                        .refillIntervally(3, Duration.ofMinutes(1))
+                        .build())
                     .build()
             );
 

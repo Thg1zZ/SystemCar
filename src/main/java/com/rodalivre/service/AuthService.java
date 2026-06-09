@@ -4,10 +4,14 @@ import com.rodalivre.api.dto.request.LoginRequest;
 import com.rodalivre.api.dto.request.RegisterRequest;
 import com.rodalivre.api.dto.response.JwtResponse;
 import com.rodalivre.domain.entity.User;
+import com.rodalivre.domain.entity.RefreshToken;
 import com.rodalivre.domain.enums.UserRole;
 import com.rodalivre.repository.UserRepository;
+import com.rodalivre.repository.RefreshTokenRepository;
 import com.rodalivre.security.JwtTokenProvider;
 import com.rodalivre.security.UserDetailsImpl;
+import com.rodalivre.util.Validador;
+import com.rodalivre.exception.LocadoraException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,11 +20,17 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import com.rodalivre.exception.LocadoraException;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +40,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
-    private final com.rodalivre.repository.RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public JwtResponse authenticateUser(LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
@@ -48,8 +58,8 @@ public class AuthService {
         return new JwtResponse(jwt, userDetails.getId(), userDetails.getUsername(), userDetails.getFullName(), roles);
     }
 
-    @org.springframework.transaction.annotation.Transactional
-    public JwtResponse login(LoginRequest loginRequest, jakarta.servlet.http.HttpServletResponse response) {
+    @Transactional
+    public JwtResponse login(LoginRequest loginRequest, HttpServletResponse response) {
         JwtResponse jwtResponse = authenticateUser(loginRequest);
         User user = userRepository.findById(jwtResponse.getId())
                 .orElseThrow(() -> new LocadoraException("Usuário não encontrado"));
@@ -60,19 +70,19 @@ public class AuthService {
         return jwtResponse;
     }
 
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     public String createAndPersistRefreshToken(User user) {
         byte[] randomBytes = new byte[64];
-        new java.security.SecureRandom().nextBytes(randomBytes);
-        String refreshToken = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+        new SecureRandom().nextBytes(randomBytes);
+        String refreshToken = Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
 
         String tokenHash = hashSha256(refreshToken);
-        java.time.LocalDateTime expiryDate = java.time.LocalDateTime.now().plusDays(7);
+        LocalDateTime expiryDate = LocalDateTime.now().plusDays(7);
 
         // Deleta tokens antigos do mesmo usuario para nao poluir o banco
         refreshTokenRepository.deleteByUser(user);
 
-        com.rodalivre.domain.entity.RefreshToken tokenEntity = com.rodalivre.domain.entity.RefreshToken.builder()
+        RefreshToken tokenEntity = RefreshToken.builder()
                 .user(user)
                 .tokenHash(tokenHash)
                 .expiryDate(expiryDate)
@@ -86,8 +96,8 @@ public class AuthService {
 
     private String hashSha256(String token) {
         try {
-            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(token.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
             StringBuilder hexString = new StringBuilder();
             for (byte b : hash) {
                 String hex = Integer.toHexString(0xff & b);
@@ -100,17 +110,17 @@ public class AuthService {
         }
     }
 
-    @org.springframework.transaction.annotation.Transactional
-    public String refreshAccessToken(String refreshToken, jakarta.servlet.http.HttpServletResponse response) {
+    @Transactional
+    public String refreshAccessToken(String refreshToken, HttpServletResponse response) {
         if (refreshToken == null || refreshToken.isBlank()) {
             throw new LocadoraException("Refresh token ausente.");
         }
 
         String tokenHash = hashSha256(refreshToken);
-        com.rodalivre.domain.entity.RefreshToken tokenEntity = refreshTokenRepository.findByTokenHash(tokenHash)
+        RefreshToken tokenEntity = refreshTokenRepository.findByTokenHash(tokenHash)
                 .orElseThrow(() -> new LocadoraException("Refresh token inválido ou não encontrado."));
 
-        if (tokenEntity.isRevoked() || tokenEntity.getExpiryDate().isBefore(java.time.LocalDateTime.now())) {
+        if (tokenEntity.isRevoked() || tokenEntity.getExpiryDate().isBefore(LocalDateTime.now())) {
             // Se o token foi revogado ou expirou, limpa todos os tokens do usuario por seguranca (reuso suspeito)
             refreshTokenRepository.deleteByUser(tokenEntity.getUser());
             throw new LocadoraException("Refresh token expirado ou revogado.");
@@ -128,14 +138,14 @@ public class AuthService {
         // Gera novo access token
         UserDetailsImpl userDetails = UserDetailsImpl.build(tokenEntity.getUser());
         Authentication authentication = 
-            new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+            new UsernamePasswordAuthenticationToken(
                     userDetails, null, userDetails.getAuthorities()
             );
 
         return jwtTokenProvider.generateToken(authentication);
     }
 
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     public void logout(String refreshToken) {
         if (refreshToken != null && !refreshToken.isBlank()) {
             String tokenHash = hashSha256(refreshToken);
@@ -143,8 +153,8 @@ public class AuthService {
         }
     }
 
-    public void setRefreshTokenCookie(jakarta.servlet.http.HttpServletResponse response, String refreshToken) {
-        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("refreshToken", refreshToken);
+    public void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
+        Cookie cookie = new Cookie("refreshToken", refreshToken);
         cookie.setHttpOnly(true);
         cookie.setSecure(true); // O Render usa HTTPS por padrao
         cookie.setPath("/api/v1/auth"); // Restringe o cookie ao endpoint de autenticacao
@@ -153,8 +163,8 @@ public class AuthService {
         response.addCookie(cookie);
     }
 
-    public void clearRefreshTokenCookie(jakarta.servlet.http.HttpServletResponse response) {
-        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("refreshToken", null);
+    public void clearRefreshTokenCookie(HttpServletResponse response) {
+        Cookie cookie = new Cookie("refreshToken", null);
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
         cookie.setPath("/api/v1/auth");
@@ -172,11 +182,11 @@ public class AuthService {
             throw new LocadoraException("Erro: CPF já está cadastrado!");
         }
 
-        if (!com.rodalivre.util.Validador.isCpfValido(registerRequest.getCpf())) {
+        if (!Validador.isCpfValido(registerRequest.getCpf())) {
             throw new LocadoraException("Erro: CPF inválido. Certifique-se de fornecer um CPF com dígitos verificadores corretos.");
         }
 
-        if (!com.rodalivre.util.Validador.isCnhValida(registerRequest.getCnh())) {
+        if (!Validador.isCnhValida(registerRequest.getCnh())) {
             throw new LocadoraException("Erro: CNH inválida. Certifique-se de fornecer uma CNH válida de 11 dígitos.");
         }
 
@@ -203,7 +213,7 @@ public class AuthService {
                 .phone(registerRequest.getPhone())
                 .birthDate(registerRequest.getBirthDate())
                 .termsAccepted(registerRequest.getTermsAccepted())
-                .termsAcceptedAt(java.time.LocalDateTime.now())
+                .termsAcceptedAt(LocalDateTime.now())
                 .role(UserRole.CLIENT)
                 .build();
 
