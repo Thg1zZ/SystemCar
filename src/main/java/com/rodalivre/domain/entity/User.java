@@ -33,7 +33,7 @@ public class User {
     private String passwordHash;
 
     @Convert(converter = com.rodalivre.util.AesEncryptorConverter.class)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100) // Ciphertext AES-CBC/Base64: ~44 chars. 100 dá margem segura.
     private String cpf;
 
     @Column(length = 20)
@@ -43,7 +43,7 @@ public class User {
     private LocalDate birthDate;
 
     @Convert(converter = com.rodalivre.util.AesEncryptorConverter.class)
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 100) // Ciphertext AES-CBC/Base64: ~44 chars. 100 dá margem segura.
     private String cnh;
 
     @Column(name = "cnh_expiration_date")
