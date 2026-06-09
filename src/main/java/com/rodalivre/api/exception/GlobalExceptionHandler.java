@@ -42,6 +42,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
     }
 
+    @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+    public ResponseEntity<Map<String, String>> handleAuthenticationException(org.springframework.security.core.AuthenticationException ex) {
+        log.warn("[AUTENTICACAO] Falha de login ou token: {}", ex.getMessage());
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "Credenciais inválidas. Verifique seu e-mail e senha.");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGlobalException(Exception ex) {
         // Log interno obrigatório: sem isso, erros inesperados são silenciosos em produção.

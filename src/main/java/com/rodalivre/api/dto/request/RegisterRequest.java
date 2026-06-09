@@ -19,7 +19,9 @@ public class RegisterRequest {
     private String email;
 
     @NotBlank(message = "Senha é obrigatória")
-    @Size(min = 6, message = "A senha deve ter pelo menos 6 caracteres")
+    @Size(min = 12, message = "A senha deve ter pelo menos 12 caracteres")
+    @jakarta.validation.constraints.Pattern(regexp = "^(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{12,}$", 
+             message = "A senha deve ter pelo menos 12 caracteres, incluindo uma letra maiúscula, um número e um caractere especial.")
     private String password;
 
     @NotBlank(message = "CPF é obrigatório")
@@ -27,7 +29,7 @@ public class RegisterRequest {
     private String cpf;
 
     @NotBlank(message = "CNH é obrigatória")
-    @Size(min = 11, max = 11, message = "A CNH deve ter exatamente 11 dígitos")
+    @com.rodalivre.api.validation.CNHValid(message = "CNH inválida ou malformada")
     private String cnh;
 
     @NotNull(message = "Data de vencimento da CNH é obrigatória")

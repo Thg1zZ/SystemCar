@@ -23,8 +23,9 @@ public class VehicleService {
     private final VehicleRepository vehicleRepository;
     private final BranchRepository branchRepository;
 
-    public List<VehicleResponse> getAllVehicles() {
-        return vehicleRepository.findAll().stream()
+    public List<VehicleResponse> getAllVehicles(int page, int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        return vehicleRepository.findAll(pageable).getContent().stream()
                 .map(VehicleResponse::fromEntity)
                 .collect(Collectors.toList());
     }

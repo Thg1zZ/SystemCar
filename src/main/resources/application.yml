@@ -3,25 +3,25 @@ spring:
     name: rodalivre-backend
 
   datasource:
-    url: jdbc:h2:mem:rodalivre_db;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
-    username: sa
-    password: 
-    driver-class-name: org.h2.Driver
+    url: ${DATABASE_URL:jdbc:h2:mem:rodalivre_db;DB_CLOSE_DELAY=-1;MODE=PostgreSQL}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
+    driver-class-name: ${DB_DRIVER:org.h2.Driver}
 
   h2:
     console:
-      enabled: true
+      enabled: ${H2_CONSOLE_ENABLED:false}
       path: /h2-console
 
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: ${JPA_DIALECT:org.hibernate.dialect.H2Dialect}
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
-        format_sql: true
-    show-sql: true
+        dialect: ${JPA_DIALECT:org.hibernate.dialect.H2Dialect}
+        format_sql: ${JPA_FORMAT_SQL:false}
+    show-sql: ${JPA_SHOW_SQL:false}
 
   flyway:
     enabled: false
@@ -34,10 +34,12 @@ jwt:
 server:
   port: 8080
   error:
-    include-message: always
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
 
-# Chaves sensíveis — configure via variável de ambiente.
-# DB_ENCRYPTION_KEY: chave AES-256 para criptografia de CPF/CNH (LGPD).
-#   Mínimo obrigatório: 32 caracteres.
-#   Configure no ambiente: $env:DB_ENCRYPTION_KEY = "sua-chave-aqui"
-#   Nunca deixe esse valor no código-fonte ou neste arquivo se ele for versionado.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

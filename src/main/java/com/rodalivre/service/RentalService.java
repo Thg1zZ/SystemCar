@@ -37,8 +37,9 @@ public class RentalService {
     private final UserRepository userRepository;
     private final AuditLogService auditLogService;
 
-    public List<RentalResponse> getAllRentals() {
-        return rentalRepository.findAll().stream()
+    public List<RentalResponse> getAllRentals(int page, int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        return rentalRepository.findAll(pageable).getContent().stream()
                 .map(RentalResponse::fromEntity)
                 .collect(Collectors.toList());
     }

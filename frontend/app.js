@@ -26,22 +26,115 @@ async function detectApiUrl() {
     }
 }
 
+function escapeHTML(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/[&<>"']/g, function(m) {
+        switch (m) {
+            case '&': return '&amp;';
+            case '<': return '&lt;';
+            case '>': return '&gt;';
+            case '"': return '&quot;';
+            case "'": return '&#039;';
+            default: return m;
+        }
+    });
+}
+
 let cachedBranches = [];
-let currentUserToken = localStorage.getItem('jwt_token') || null;
+let currentUserToken = null;
 let currentUserInfo = null;
+let refreshIntervalId = null;
+
+// Interceptador seguro de LocalStorage para o Token JWT e informacoes do usuario (LGPD e OWASP)
+// O token nunca e escrito no disco (localStorage real), permanecendo apenas na memoria da aplicacao.
+const originalGetItem = localStorage.getItem;
+localStorage.getItem = function(key) {
+    if (key === 'jwt_token') {
+        return currentUserToken;
+    }
+    if (key === 'user_info') {
+        return sessionStorage.getItem('user_info');
+    }
+    return originalGetItem.apply(this, arguments);
+};
+
+const originalSetItem = localStorage.setItem;
+localStorage.setItem = function(key, value) {
+    if (key === 'jwt_token') {
+        currentUserToken = value;
+        return;
+    }
+    if (key === 'user_info') {
+        try {
+            currentUserInfo = JSON.parse(value);
+        } catch(e) {
+            currentUserInfo = null;
+        }
+        sessionStorage.setItem('user_info', value);
+        return;
+    }
+    return originalSetItem.apply(this, arguments);
+};
+
+const originalRemoveItem = localStorage.removeItem;
+localStorage.removeItem = function(key) {
+    if (key === 'jwt_token') {
+        currentUserToken = null;
+        return;
+    }
+    if (key === 'user_info') {
+        currentUserInfo = null;
+        sessionStorage.removeItem('user_info');
+        return;
+    }
+    return originalRemoveItem.apply(this, arguments);
+};
+
+async function attemptTokenRefresh() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+            method: 'POST',
+            credentials: 'include'
+        });
+        if (response.ok) {
+            const data = await response.json();
+            currentUserToken = data.accessToken;
+            
+            const userResponse = await fetch(`${API_BASE_URL}/users/me`, {
+                headers: { 'Authorization': `Bearer ${currentUserToken}` }
+            });
+            if (userResponse.ok) {
+                currentUserInfo = await userResponse.json();
+                sessionStorage.setItem('user_info', JSON.stringify(currentUserInfo));
+                startRefreshTimer();
+                return true;
+            }
+        }
+    } catch (e) {
+        console.error('Erro ao tentar renovar sessão:', e);
+    }
+    
+    currentUserToken = null;
+    currentUserInfo = null;
+    sessionStorage.removeItem('user_info');
+    if (refreshIntervalId) {
+        clearInterval(refreshIntervalId);
+        refreshIntervalId = null;
+    }
+    return false;
+}
+
+function startRefreshTimer() {
+    if (refreshIntervalId) clearInterval(refreshIntervalId);
+    refreshIntervalId = setInterval(attemptTokenRefresh, 14 * 60 * 1000); // Refresh a cada 14 minutos
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 0. Detectar a API correta de forma assíncrona e resiliente
     await detectApiUrl();
 
-    // Carregar informações do localStorage
-    if (localStorage.getItem('user_info')) {
-        try {
-            currentUserInfo = JSON.parse(localStorage.getItem('user_info'));
-        } catch(e) {
-            currentUserInfo = null;
-        }
-    }
+    // 0.1 Tentar renovar sessao ativa silenciosamente
+    await attemptTokenRefresh();
 
     // 1. Initializations
     initSplashScreen();
@@ -532,7 +625,8 @@ function initAuth() {
                 const response = await fetch(`${API_BASE_URL}/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ email, password }),
+                    credentials: 'include'
                 });
                 
                 if (!response.ok) {
@@ -557,8 +651,7 @@ function initAuth() {
                 loginModal.classList.remove('show');
                 loginForm.reset();
                 
-                currentUserToken = data.token;
-                currentUserInfo = data;
+                startRefreshTimer();
                 updateAuthHeader();
                 
             } catch(err) {
@@ -691,7 +784,7 @@ function updateAuthHeader() {
             if (isAdmin) {
                 authContainer.innerHTML = `
                     <span class="user-greeting" style="color: var(--text-main); font-weight: 500; margin-right: 1.2rem; font-size: 0.95rem;">
-                        Olá, <strong style="color: var(--primary); font-weight: 700;">${firstName} (Admin)</strong>
+                        Olá, <strong style="color: var(--primary); font-weight: 700;">${escapeHTML(firstName)} (Admin)</strong>
                     </span>
                     <button class="btn btn-primary" id="btn-admin-dashboard" style="padding: 0.5rem 1rem; font-size: 0.9rem; margin-right: 0.8rem; display: inline-flex; align-items: center; gap: 0.4rem;">
                         <i data-lucide="layout-dashboard" style="width: 16px; height: 16px;"></i> Painel Admin
@@ -706,7 +799,7 @@ function updateAuthHeader() {
             } else {
                 authContainer.innerHTML = `
                     <span class="user-greeting" style="color: var(--text-main); font-weight: 500; margin-right: 1.2rem; font-size: 0.95rem;">
-                        Olá, <strong style="color: var(--primary); font-weight: 700;">${firstName}</strong>
+                        Olá, <strong style="color: var(--primary); font-weight: 700;">${escapeHTML(firstName)}</strong>
                     </span>
                     <button class="btn btn-primary" id="btn-client-profile" style="padding: 0.5rem 1rem; font-size: 0.9rem; margin-right: 0.8rem; display: inline-flex; align-items: center; gap: 0.4rem;">
                         <i data-lucide="user" style="width: 16px; height: 16px;"></i> Minha Conta
@@ -720,11 +813,21 @@ function updateAuthHeader() {
             }
             
             // Logout click listener
-            document.getElementById('btn-logout').addEventListener('click', () => {
+            document.getElementById('btn-logout').addEventListener('click', async () => {
+                try {
+                    await fetch(`${API_BASE_URL}/auth/logout`, {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+                } catch (e) {
+                    console.error("Erro ao realizar logout no servidor:", e);
+                }
                 localStorage.removeItem('jwt_token');
                 localStorage.removeItem('user_info');
-                currentUserToken = null;
-                currentUserInfo = null;
+                if (refreshIntervalId) {
+                    clearInterval(refreshIntervalId);
+                    refreshIntervalId = null;
+                }
                 updateAuthHeader();
             });
             
@@ -2059,10 +2162,10 @@ async function loadClientRentals() {
             }
             
             tr.innerHTML = `
-                <td style="padding: 0.75rem;"><strong>${rental.vehicleBrand} ${rental.vehicleModel}</strong><br><span style="font-size: 0.75rem; color: var(--text-light); font-weight: 550;">${rental.vehicleCategory}</span></td>
-                <td style="padding: 0.75rem;">Retirada: ${pickup}<br>Devolução: ${returnD}</td>
+                <td style="padding: 0.75rem;"><strong>${escapeHTML(rental.vehicleBrand)} ${escapeHTML(rental.vehicleModel)}</strong><br><span style="font-size: 0.75rem; color: var(--text-light); font-weight: 550;">${escapeHTML(rental.vehicleCategory)}</span></td>
+                <td style="padding: 0.75rem;">Retirada: ${escapeHTML(pickup)}<br>Devolução: ${escapeHTML(returnD)}</td>
                 <td style="padding: 0.75rem; font-weight: 700; color: var(--secondary);">R$ ${rental.totalCost.toFixed(2)}</td>
-                <td style="padding: 0.75rem;"><span class="status-badge ${statusClass}">${statusText}</span></td>
+                <td style="padding: 0.75rem;"><span class="status-badge ${escapeHTML(statusClass)}">${escapeHTML(statusText)}</span></td>
             `;
             
             tbody.appendChild(tr);

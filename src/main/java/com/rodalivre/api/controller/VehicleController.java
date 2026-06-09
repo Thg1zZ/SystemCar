@@ -20,8 +20,12 @@ public class VehicleController {
     private final VehicleService vehicleService;
 
     @GetMapping
-    public ResponseEntity<List<VehicleResponse>> getAllVehicles() {
-        return ResponseEntity.ok(vehicleService.getAllVehicles());
+    public ResponseEntity<List<VehicleResponse>> getAllVehicles(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        int limitSize = Math.min(size, 100);
+        return ResponseEntity.ok(vehicleService.getAllVehicles(page, limitSize));
     }
 
     @GetMapping("/{id}")

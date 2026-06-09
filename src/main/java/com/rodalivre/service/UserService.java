@@ -3,6 +3,7 @@ package com.rodalivre.service;
 import com.rodalivre.api.dto.request.UpdatePasswordRequest;
 import com.rodalivre.api.dto.request.UpdateAvatarRequest;
 import com.rodalivre.api.dto.response.UserProfileResponse;
+import com.rodalivre.api.dto.response.LgpdDataResponse;
 import com.rodalivre.domain.entity.User;
 import com.rodalivre.exception.LocadoraException;
 import com.rodalivre.repository.UserRepository;
@@ -19,6 +20,8 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final com.rodalivre.repository.RentalRepository rentalRepository;
+    private final AuditLogService auditLogService;
 
     public UserProfileResponse getUserProfile() {
         UserDetailsImpl currentUser = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -37,8 +40,12 @@ public class UserService {
             throw new LocadoraException("Senha atual incorreta!");
         }
 
-        if (request.getNewPassword().length() < 6) {
-            throw new LocadoraException("A nova senha deve ter pelo menos 6 caracteres!");
+        String newPassword = request.getNewPassword();
+        if (newPassword == null || newPassword.length() < 12 ||
+            !newPassword.matches(".*[A-Z].*") ||
+            !newPassword.matches(".*\\d.*") ||
+            !newPassword.matches(".*[^A-Za-z0-9].*")) {
+            throw new LocadoraException("A nova senha deve ter pelo menos 12 caracteres, incluindo uma letra maiúscula, um número e um caractere especial.");
         }
 
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
@@ -53,5 +60,49 @@ public class UserService {
 
         user.setAvatar(request.getAvatar());
         userRepository.save(user);
+    }
+
+    public LgpdDataResponse getLgpdData() {
+        UserDetailsImpl currentUser = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new LocadoraException("Usuário não encontrado"));
+        return LgpdDataResponse.fromEntity(user);
+    }
+
+    @Transactional
+    public void excluirContaLgpd() {
+        UserDetailsImpl currentUser = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository.findById(currentUser.getId())
+                .orElseThrow(() -> new LocadoraException("Usuário não encontrado"));
+
+        // Verificar alugueis ativos, pendentes ou confirmados
+        boolean possuiAluguelAtivo = rentalRepository.findByUserId(user.getId()).stream()
+                .anyMatch(r -> r.getStatus() == com.rodalivre.domain.enums.RentalStatus.ACTIVE || 
+                               r.getStatus() == com.rodalivre.domain.enums.RentalStatus.CONFIRMED || 
+                               r.getStatus() == com.rodalivre.domain.enums.RentalStatus.PENDING);
+        if (possuiAluguelAtivo) {
+            throw new LocadoraException("Não é possível excluir a conta pois você possui reservas ativas, confirmadas ou pendentes.");
+        }
+
+        // Anonimizacao para o direito ao esquecimento (LGPD) mantendo os registros financeiros de auditoria
+        user.setFullName("Usuário Anonimizado");
+        user.setEmail("deleted-" + java.util.UUID.randomUUID() + "@systemcar.com.br");
+        user.setPasswordHash("DELETED_USER_PASSWORD_HASH");
+        user.setCpf("00000000000");
+        user.setCnh("00000000000");
+        user.setPhone(null);
+        user.setBirthDate(LocalDate.of(1970, 1, 1));
+        user.setAvatar(null);
+        user.setActive(false);
+
+        userRepository.save(user);
+
+        auditLogService.logAction(
+                "ANONIMIZAR_CONTA",
+                "User",
+                user.getId(),
+                "ACTIVE",
+                "ANONIMIZED"
+        );
     }
 }

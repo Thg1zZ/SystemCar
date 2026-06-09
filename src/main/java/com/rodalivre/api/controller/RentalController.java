@@ -21,8 +21,12 @@ public class RentalController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('OPERATOR', 'ADMIN')")
-    public ResponseEntity<List<RentalResponse>> getAllRentals() {
-        return ResponseEntity.ok(rentalService.getAllRentals());
+    public ResponseEntity<List<RentalResponse>> getAllRentals(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        int limitSize = Math.min(size, 100);
+        return ResponseEntity.ok(rentalService.getAllRentals(page, limitSize));
     }
 
     @GetMapping("/me")

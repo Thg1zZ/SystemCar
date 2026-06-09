@@ -12,7 +12,8 @@ import java.util.Base64;
 @Converter
 public class AesEncryptorConverter implements AttributeConverter<String, String> {
 
-    private static final String ALGORITHM = "AES/CBC/PKCS5Padding";
+    private static final String ALGORITHM_GCM = "AES/GCM/NoPadding";
+    private static final String ALGORITHM_CBC = "AES/CBC/PKCS5Padding";
     private static final String KEY_ALGORITHM = "AES";
 
     private final SecretKeySpec keySpec;
@@ -41,16 +42,16 @@ public class AesEncryptorConverter implements AttributeConverter<String, String>
             return null;
         }
         try {
-            // Gerando um IV aleatório de 16 bytes (padrão do AES/CBC)
-            byte[] iv = new byte[16];
+            // Gerando um IV aleatório de 12 bytes para GCM (tamanho recomendado)
+            byte[] iv = new byte[12];
             secureRandom.nextBytes(iv);
-            IvParameterSpec ivSpec = new IvParameterSpec(iv);
+            javax.crypto.spec.GCMParameterSpec parameterSpec = new javax.crypto.spec.GCMParameterSpec(128, iv);
 
-            Cipher cipher = Cipher.getInstance(ALGORITHM);
-            cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
+            Cipher cipher = Cipher.getInstance(ALGORITHM_GCM);
+            cipher.init(Cipher.ENCRYPT_MODE, keySpec, parameterSpec);
             byte[] encryptedData = cipher.doFinal(attribute.getBytes(StandardCharsets.UTF_8));
 
-            // Concatenando IV (16 bytes) + Dados Criptografados
+            // Concatenando IV (12 bytes) + Dados Criptografados
             byte[] combined = new byte[iv.length + encryptedData.length];
             System.arraycopy(iv, 0, combined, 0, iv.length);
             System.arraycopy(encryptedData, 0, combined, iv.length, encryptedData.length);
@@ -68,25 +69,46 @@ public class AesEncryptorConverter implements AttributeConverter<String, String>
         }
         try {
             byte[] combined = Base64.getDecoder().decode(dbData);
-            if (combined.length < 16) {
-                throw new IllegalArgumentException("Dados criptografados inválidos ou corrompidos");
+            
+            // Tenta decodificar primeiro usando o novo padrao AES-GCM (IV de 12 bytes)
+            try {
+                if (combined.length < 12) {
+                    throw new IllegalArgumentException("Dados muito curtos para AES-GCM");
+                }
+                
+                byte[] iv = new byte[12];
+                System.arraycopy(combined, 0, iv, 0, 12);
+                javax.crypto.spec.GCMParameterSpec parameterSpec = new javax.crypto.spec.GCMParameterSpec(128, iv);
+
+                int encryptedSize = combined.length - 12;
+                byte[] encryptedData = new byte[encryptedSize];
+                System.arraycopy(combined, 12, encryptedData, 0, encryptedSize);
+
+                Cipher cipher = Cipher.getInstance(ALGORITHM_GCM);
+                cipher.init(Cipher.DECRYPT_MODE, keySpec, parameterSpec);
+                byte[] decrypted = cipher.doFinal(encryptedData);
+
+                return new String(decrypted, StandardCharsets.UTF_8);
+            } catch (Exception gcmException) {
+                // Fallback robusto para descriptografia AES-CBC antiga (IV de 16 bytes) se falhar
+                if (combined.length < 16) {
+                    throw new IllegalArgumentException("Dados criptografados inválidos ou corrompidos");
+                }
+
+                byte[] iv = new byte[16];
+                System.arraycopy(combined, 0, iv, 0, 16);
+                IvParameterSpec ivSpec = new IvParameterSpec(iv);
+
+                int encryptedSize = combined.length - 16;
+                byte[] encryptedData = new byte[encryptedSize];
+                System.arraycopy(combined, 16, encryptedData, 0, encryptedSize);
+
+                Cipher cipher = Cipher.getInstance(ALGORITHM_CBC);
+                cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
+                byte[] decrypted = cipher.doFinal(encryptedData);
+
+                return new String(decrypted, StandardCharsets.UTF_8);
             }
-
-            // Extraindo o IV de 16 bytes do início
-            byte[] iv = new byte[16];
-            System.arraycopy(combined, 0, iv, 0, 16);
-            IvParameterSpec ivSpec = new IvParameterSpec(iv);
-
-            // Extraindo o restante dos bytes correspondentes ao texto cifrado
-            int encryptedSize = combined.length - 16;
-            byte[] encryptedData = new byte[encryptedSize];
-            System.arraycopy(combined, 16, encryptedData, 0, encryptedSize);
-
-            Cipher cipher = Cipher.getInstance(ALGORITHM);
-            cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
-            byte[] decrypted = cipher.doFinal(encryptedData);
-
-            return new String(decrypted, StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new RuntimeException("Erro ao descriptografar atributo sensível do banco de dados (LGPD/ISO 27001)", e);
         }
