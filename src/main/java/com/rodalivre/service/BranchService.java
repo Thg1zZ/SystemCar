@@ -58,6 +58,12 @@ public class BranchService {
         Branch branch = branchRepository.findById(id)
                 .orElseThrow(() -> new LocadoraException("Filial não encontrada"));
 
+        // Validar unicidade do nome apenas se ele foi alterado
+        if (!branch.getName().equals(request.getName()) &&
+                branchRepository.findByName(request.getName()).isPresent()) {
+            throw new LocadoraException("Já existe uma filial com o nome '" + request.getName() + "'.");
+        }
+
         branch.setName(request.getName());
         branch.setStreet(request.getStreet());
         branch.setCity(request.getCity());

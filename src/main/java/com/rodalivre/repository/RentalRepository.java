@@ -18,12 +18,15 @@ public interface RentalRepository extends JpaRepository<Rental, UUID> {
     List<Rental> findByVehicleId(UUID vehicleId);
 
     @Query("SELECT COUNT(r) > 0 FROM Rental r WHERE r.vehicle.id = :vehicleId " +
-           "AND r.status IN ('PENDING', 'CONFIRMED', 'ACTIVE') " +
+           "AND r.status IN (" +
+           "  com.rodalivre.domain.enums.RentalStatus.PENDING," +
+           "  com.rodalivre.domain.enums.RentalStatus.CONFIRMED," +
+           "  com.rodalivre.domain.enums.RentalStatus.ACTIVE) " +
            "AND ((r.pickupDate BETWEEN :pickup AND :returnDate) " +
            "OR (r.returnDate BETWEEN :pickup AND :returnDate) " +
            "OR (:pickup BETWEEN r.pickupDate AND r.returnDate))")
-    boolean existsOverlappingRentals(@Param("vehicleId") UUID vehicleId, 
-                                     @Param("pickup") LocalDateTime pickup, 
+    boolean existsOverlappingRentals(@Param("vehicleId") UUID vehicleId,
+                                     @Param("pickup") LocalDateTime pickup,
                                      @Param("returnDate") LocalDateTime returnDate);
 
     long countByStatus(RentalStatus status);

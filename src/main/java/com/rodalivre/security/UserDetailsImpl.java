@@ -54,16 +54,22 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public boolean isAccountNonExpired() {
+        // DECISÃO DE DESIGN (MVP): a entidade User não possui campo de expiração de conta.
+        // Alterar quando o campo 'accountExpirationDate' for adicionado à entidade User.
         return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
+        // DECISÃO DE DESIGN (MVP): a entidade User não possui campo de bloqueio de conta.
+        // Alterar quando o campo 'lockedUntil' for adicionado à entidade User.
         return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
+        // DECISÃO DE DESIGN (MVP): expiração de credenciais não implementada.
+        // Alterar quando política de rotação de senha for adicionada.
         return true;
     }
 

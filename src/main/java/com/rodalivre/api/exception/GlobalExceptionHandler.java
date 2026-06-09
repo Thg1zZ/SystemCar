@@ -1,6 +1,7 @@
 package com.rodalivre.api.exception;
 
 import com.rodalivre.exception.LocadoraException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -42,6 +44,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGlobalException(Exception ex) {
+        // Log interno obrigatório: sem isso, erros inesperados são silenciosos em produção.
+        // A mensagem de erro ao cliente é propositalmente genérica — nunca expor stack trace.
+        log.error("[ERRO INTERNO] Exceção não tratada capturada pelo GlobalExceptionHandler: {}", ex.getMessage(), ex);
         Map<String, String> error = new HashMap<>();
         error.put("error", "Ocorreu um erro interno no servidor.");
         // Não vaza stack trace para o cliente

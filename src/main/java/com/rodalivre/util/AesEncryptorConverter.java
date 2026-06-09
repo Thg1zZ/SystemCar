@@ -15,18 +15,20 @@ public class AesEncryptorConverter implements AttributeConverter<String, String>
     private static final String ALGORITHM = "AES/CBC/PKCS5Padding";
     private static final String KEY_ALGORITHM = "AES";
     private static final String SECRET_KEY_ENV = System.getenv("DB_ENCRYPTION_KEY");
-    private static final String DEFAULT_KEY = "SystemCarSecretKeyForLGPD_2026!"; // Chave padrão simétrica
 
     private final SecretKeySpec keySpec;
     private final SecureRandom secureRandom = new SecureRandom();
 
     public AesEncryptorConverter() {
-        byte[] keyBytes;
-        if (SECRET_KEY_ENV != null && SECRET_KEY_ENV.length() >= 32) {
-            keyBytes = SECRET_KEY_ENV.substring(0, 32).getBytes(StandardCharsets.UTF_8);
-        } else {
-            keyBytes = DEFAULT_KEY.getBytes(StandardCharsets.UTF_8);
+        if (SECRET_KEY_ENV == null || SECRET_KEY_ENV.length() < 32) {
+            throw new IllegalStateException(
+                "[SEGURANÇA/LGPD] A variável de ambiente DB_ENCRYPTION_KEY não está configurada " +
+                "ou possui menos de 32 caracteres. Esta chave é obrigatória para criptografar " +
+                "dados sensíveis (CPF/CNH) conforme LGPD e ISO 27001. " +
+                "Configure a variável de ambiente antes de iniciar a aplicação."
+            );
         }
+        byte[] keyBytes = SECRET_KEY_ENV.substring(0, 32).getBytes(StandardCharsets.UTF_8);
         this.keySpec = new SecretKeySpec(keyBytes, KEY_ALGORITHM);
     }
 

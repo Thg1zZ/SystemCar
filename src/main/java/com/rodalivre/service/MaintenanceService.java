@@ -39,6 +39,12 @@ public class MaintenanceService {
             throw new VeiculoIndisponivelException("Veículo alugado não pode ir para manutenção");
         }
 
+        if (vehicle.getStatus() == VehicleStatus.MAINTENANCE) {
+            throw new LocadoraException("Veículo já está em manutenção. Finalize o registro atual antes de abrir um novo.");
+        }
+
+        String statusAnterior = vehicle.getStatus().name();
+
         vehicle.setStatus(VehicleStatus.MAINTENANCE);
         vehicleRepository.save(vehicle);
 
@@ -59,8 +65,8 @@ public class MaintenanceService {
                 "REGISTER_MAINTENANCE",
                 "Vehicle",
                 vehicle.getId(),
-                "AVAILABLE",
-                "MAINTENANCE"
+                statusAnterior,
+                VehicleStatus.MAINTENANCE.name()
         );
 
         return MaintenanceResponse.fromEntity(savedRecord);

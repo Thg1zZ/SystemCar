@@ -35,3 +35,9 @@ server:
   port: 8080
   error:
     include-message: always
+
+# Chaves sensíveis — configure via variável de ambiente.
+# DB_ENCRYPTION_KEY: chave AES-256 para criptografia de CPF/CNH (LGPD).
+#   Mínimo obrigatório: 32 caracteres.
+#   Configure no ambiente: $env:DB_ENCRYPTION_KEY = "sua-chave-aqui"
+#   Nunca deixe esse valor no código-fonte ou neste arquivo se ele for versionado.

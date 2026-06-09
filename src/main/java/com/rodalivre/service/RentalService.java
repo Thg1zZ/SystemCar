@@ -56,7 +56,9 @@ public class RentalService {
         User user = userRepository.findById(currentUser.getId())
                 .orElseThrow(() -> new LocadoraException("Usuário não encontrado"));
 
-        if (request.getPickupDate().isBefore(java.time.LocalDateTime.now().minusMinutes(5))) {
+        // Defesa em profundidade: validação de data no Service independente do Bean Validation do DTO.
+        // O backend NUNCA confia no frontend — esta verificação garante segurança mesmo em chamadas diretas à API.
+        if (request.getPickupDate().isBefore(java.time.LocalDateTime.now())) {
             throw new LocadoraException("Erro: A data de retirada não pode ser no passado.");
         }
 
@@ -107,16 +109,19 @@ public class RentalService {
                 .totalCost(baseCost)
                 .build();
 
+        vehicle.setStatus(VehicleStatus.RENTED);
+        vehicleRepository.save(vehicle);
+
         Rental savedRental = rentalRepository.save(rental);
-        
+
         auditLogService.logAction(
                 "CREATE_RENTAL",
                 "Rental",
                 savedRental.getId(),
                 "NONE",
-                "PENDING"
+                RentalStatus.PENDING.name()
         );
-        
+
         return RentalResponse.fromEntity(savedRental);
     }
 
@@ -125,8 +130,8 @@ public class RentalService {
         Rental rental = rentalRepository.findById(rentalId)
                 .orElseThrow(() -> new LocadoraException("Aluguel não encontrado"));
 
-        if (rental.getStatus() == RentalStatus.COMPLETED) {
-            throw new LocadoraException("Este aluguel já foi concluído");
+        if (rental.getStatus() != RentalStatus.ACTIVE && rental.getStatus() != RentalStatus.CONFIRMED) {
+            throw new LocadoraException("Apenas aluguéis com status ACTIVE ou CONFIRMED podem ser devolvidos. Status atual: " + rental.getStatus().name());
         }
 
         // 1. Validar se KM final >= KM inicial
@@ -186,8 +191,8 @@ public class RentalService {
                 "RETURN_RENTAL",
                 "Rental",
                 savedRental.getId(),
-                "ACTIVE",
-                "COMPLETED"
+                RentalStatus.ACTIVE.name(),
+                RentalStatus.COMPLETED.name()
         );
 
         return RentalResponse.fromEntity(savedRental);

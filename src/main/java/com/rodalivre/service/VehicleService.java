@@ -91,6 +91,12 @@ public class VehicleService {
         vehicle.setFuelType(request.getFuelType());
         vehicle.setDescription(request.getDescription());
         vehicle.setLocationBranch(branch);
+        // INTENCIONAL: o campo 'status' é omitido neste método propositalmente.
+        // O status do veículo é gerenciado EXCLUSIVAMENTE pelo fluxo de negócio:
+        //   RentalService.createRental()  → AVAILABLE → RENTED
+        //   RentalService.returnRental()  → RENTED    → AVAILABLE
+        //   MaintenanceService            → AVAILABLE → MAINTENANCE
+        // Incluí-lo aqui quebraria a integridade do ciclo de vida do veículo.
 
         Vehicle updatedVehicle = vehicleRepository.save(vehicle);
         return VehicleResponse.fromEntity(updatedVehicle);
