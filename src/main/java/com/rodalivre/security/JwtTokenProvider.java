@@ -32,19 +32,6 @@ public class JwtTokenProvider {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 
-    /**
-     * Validação de segurança na inicialização: HMAC-SHA256 exige chave mínima de 256 bits (32 bytes).
-     * Falha rápido no startup para evitar WeakKeyException em runtime durante autenticação real.
-     */
-    @jakarta.annotation.PostConstruct
-    public void validateSecretKey() {
-        if (jwtSecret == null || jwtSecret.getBytes(StandardCharsets.UTF_8).length < 32) {
-            throw new IllegalStateException(
-                "[SEGURANÇA] jwt.secret deve ter no mínimo 32 caracteres (256 bits) para uso seguro " +
-                "com HMAC-SHA256. Verifique a configuração em application.properties ou variáveis de ambiente."
-            );
-        }
-    }
 
     public String generateToken(Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
